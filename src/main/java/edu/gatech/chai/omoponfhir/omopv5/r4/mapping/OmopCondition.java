@@ -94,7 +94,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 	}
 
 	@Override
-	public Condition constructFHIR(Long fhirId, ConditionOccurrence conditionOccurrence) {
+	public Condition constructFHIR(String fhirId, ConditionOccurrence conditionOccurrence) {
 		Condition condition = new Condition();
 		condition.setId(new IdType(fhirId));
 
@@ -115,34 +115,6 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 //		Concept sourceConceptId = conditionOccurrence.getConditionSourceConcept();
 
 		return condition;
-	}
-
-	@Override
-	public Long toDbase(Condition fhirResource, IdType fhirId) throws FHIRException {
-		Long retval;
-		Long omopId = null, fhirIdLong = null;
-
-		if (fhirId != null) {
-			fhirIdLong = fhirId.getIdPartAsLong();
-			if (fhirIdLong == null) {
-				logger.error("Failed to get Condition.id as Long Value");
-				return null;
-			}
-			
-			omopId = IdMapping.getOMOPfromFHIR(fhirIdLong, ConditionResourceProvider.getType());
-		}
-
-		ConditionOccurrence conditionOccurrence = constructOmop(omopId, fhirResource);
-
-		// TODO: Do you need to call other services to update links resources.
-
-		if (conditionOccurrence.getId() != null) {
-			retval = getMyOmopService().update(conditionOccurrence).getId();
-		} else {
-			retval = getMyOmopService().create(conditionOccurrence).getId();
-		}
-
-		return IdMapping.getFHIRfromOMOP(retval, ConditionResourceProvider.getType());
 	}
 
 	public List<ParameterWrapper> mapParameter(String parameter, Object value, boolean or) {
@@ -176,7 +148,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 		case Condition.SP_ASSERTER:
 			// Condition.asserter -> Omop Provider
 			ReferenceParam patientReference = ((ReferenceParam) value);
-			String patientId = String.valueOf(patientReference.getIdPartAsLong());
+			String patientId = String.valueOf(patientReference.getIdPart());
 
 			paramWrapper.setParameterType("Long");
 			paramWrapper.setParameters(Arrays.asList("provider.id"));
@@ -236,7 +208,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 		case Condition.SP_ENCOUNTER:
 			// Condition.context -> Omop VisitOccurrence
 			ReferenceParam visitReference = (ReferenceParam) value;
-			String visitId = String.valueOf(visitReference.getIdPartAsLong());
+			String visitId = String.valueOf(visitReference.getIdPart());
 			paramWrapper.setParameterType("Long");
 			paramWrapper.setParameters(Arrays.asList("visitOccurrence.id"));
 			paramWrapper.setOperators(Arrays.asList("="));
@@ -265,7 +237,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 		// case Condition.SP_PATIENT:
 		// case Condition.SP_SUBJECT:
 		// 	ReferenceParam subjectReference = ((ReferenceParam) value);
-		// 	Long fhirPatientId = subjectReference.getIdPartAsLong();
+		// 	Long fhirPatientId = subjectReference.getIdPart();
 		// 	Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirPatientId, PatientResourceProvider.getType());
 
 		// 	String omopPersonIdString = String.valueOf(omopPersonId);
@@ -463,9 +435,9 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 
 		// get the Subject
 		if (fhirResource.getSubject() != null) {
-			Long subjectId = fhirResource.getSubject().getReferenceElement().getIdPartAsLong();
-			Long subjectFhirId = IdMapping.getOMOPfromFHIR(subjectId, PatientResourceProvider.getType());
-			fPerson = fPersonService.findById(subjectFhirId);
+			String subjectFhirId = fhirResource.getSubject().getReferenceElement().getIdPart();
+			Long subjectOmopId = IdMapping.getOMOPfromFHIR(subjectFhirId, PatientResourceProvider.getType());
+			fPerson = fPersonService.findById(subjectOmopId);
 			if (fPerson == null) {
 				try {
 					throw new FHIRException("Could not get Person class.");
@@ -481,8 +453,8 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 
 		// get the Provider
 		if (fhirResource.getAsserter() != null && !fhirResource.getAsserter().isEmpty()) {
-			Long providerId = fhirResource.getAsserter().getReferenceElement().getIdPartAsLong();
-			Long providerOmopId = IdMapping.getOMOPfromFHIR(providerId, PractitionerResourceProvider.getType());
+			String providerFhirId = fhirResource.getAsserter().getReferenceElement().getIdPart();
+			Long providerOmopId = IdMapping.getOMOPfromFHIR(providerFhirId, fhirResource.getRecorder().getReferenceElement().getResourceType());
 			provider = providerService.findById(providerOmopId);
 			if (provider != null) {
 				conditionOccurrence.setProvider(provider);

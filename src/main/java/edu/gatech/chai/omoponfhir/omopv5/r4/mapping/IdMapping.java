@@ -15,6 +15,9 @@
  *******************************************************************************/
 package edu.gatech.chai.omoponfhir.omopv5.r4.mapping;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * ID Mapping Class to manage the IDs between FHIR and OMOP.
  * 
@@ -22,30 +25,35 @@ package edu.gatech.chai.omoponfhir.omopv5.r4.mapping;
  *
  */
 public class IdMapping {
-	
-	public static Long getFHIRfromOMOP(Long omop_id, String resource_name) {
+	static final Logger logger = LoggerFactory.getLogger(IdMapping.class);
+
+	public static String getFHIRfromOMOP(Long omopId, String resourceName) {
 		// We use the same ID for now.
 		// TODO: Develop the ID mapping so that we do not reveal native
 		//       OMOP ID. If the mapping exists, send it. If not, create a new
 		//       mapping.
 		
-		return omop_id;
+		return omopId.toString();
 	}
 
 	/**
 	 * What is OMOP ID for the long part of FHIR ID
-	 * @param fhir_id
+	 * @param fhirId
 	 * @return
 	 */
-	public static Long getOMOPfromFHIR(Long fhir_id, String resource_name) {
+	public static Long getOMOPfromFHIR(String fhirId, String resourceName) {
 		// We use the same ID now.
 		// TODO: Develop the ID mapping so that we do not reveal native
 		//       OMOP ID.
 		
-		return fhir_id;
+		return Long.valueOf(fhirId);
+	}
+
+	public static void writeMapping(String fhirId, String resourceName, Long omopId) {
+		logger.info("Creating mapping for a {} with FHIR id {} and OMOP id {}", resourceName, fhirId, omopId);
 	}
 	
-	public static void writeOMOPfromFHIR(Long fhir_id) {
+	public static void writeOMOPfromFHIR(String fhirId) {
 		// Placeholder for later to use to store OMOP ID mapping info.
 		// This information will be used by getFHIRfromOMOP
 		// TODO: Develop mapping creation here.

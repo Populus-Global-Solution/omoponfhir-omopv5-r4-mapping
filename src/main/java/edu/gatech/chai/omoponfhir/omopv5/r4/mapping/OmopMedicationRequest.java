@@ -109,29 +109,9 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 	public static OmopMedicationRequest getInstance() {
 		return OmopMedicationRequest.omopMedicationRequest;
 	}
-	
-	@Override
-	public Long toDbase(MedicationRequest fhirResource, IdType fhirId) throws FHIRException {
-		Long omopId = null;
-		DrugExposure drugExposure = null;
-		if (fhirId != null) {
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPartAsLong(), MedicationRequestResourceProvider.getType());
-		}
 
-		drugExposure = constructOmop(omopId, fhirResource);
-
-		Long retOmopId = null;
-		if (omopId == null) {
-			retOmopId = getMyOmopService().create(drugExposure).getId();
-		} else {
-			retOmopId = getMyOmopService().update(drugExposure).getId();
-		}
-		
-		return IdMapping.getFHIRfromOMOP(retOmopId, MedicationStatementResourceProvider.getType());
-	}
-	
 	@Override
-	public MedicationRequest constructResource(Long fhirId, DrugExposure entity, List<String> includes) {
+	public MedicationRequest constructResource(String fhirId, DrugExposure entity, List<String> includes) {
 		MedicationRequest fhirResource = constructFHIR(fhirId, entity);
 
 		if (!includes.isEmpty()) {
@@ -144,7 +124,7 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 					Reference medicationReference = fhirResource.getMedicationReference();
 					if (medicationReference != null && !medicationReference.isEmpty()) {
 						IIdType medicationId = medicationReference.getReferenceElement();
-						Long medicationFhirId = medicationId.getIdPartAsLong();
+						String medicationFhirId = medicationId.getIdPart();
 						Medication medication = OmopMedication.getInstance().constructFHIR(medicationFhirId, entity.getDrugConcept());
 						medicationReference.setResource(medication);
 					}
@@ -156,7 +136,7 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 	}
 
 	@Override
-	public MedicationRequest constructFHIR(Long fhirId, DrugExposure entity) {
+	public MedicationRequest constructFHIR(String fhirId, DrugExposure entity) {
 		MedicationRequest medicationRequest = new MedicationRequest();
 		
 		medicationRequest.setId(new IdType(fhirId));
@@ -374,7 +354,7 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 			mapList.add(paramWrapper);
 			break;
 		case MedicationRequest.SP_ENCOUNTER:
-			Long fhirEncounterId = ((ReferenceParam) value).getIdPartAsLong();
+			String fhirEncounterId = ((ReferenceParam) value).getIdPart();
 			Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(fhirEncounterId, EncounterResourceProvider.getType());
 //			String resourceName = ((ReferenceParam) value).getResourceType();
 			
@@ -398,7 +378,7 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 //		case MedicationRequest.SP_PATIENT:
 //		case MedicationRequest.SP_SUBJECT:
 //			ReferenceParam patientReference = ((ReferenceParam) value);
-//			Long fhirPatientId = patientReference.getIdPartAsLong();
+//			Long fhirPatientId = patientReference.getIdPart();
 //			Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirPatientId, PatientResourceProvider.getType());
 //
 //			String omopPersonIdString = String.valueOf(omopPersonId);
@@ -480,7 +460,7 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 
 		for (DrugExposure entity : entities) {
 			Long omopId = entity.getIdAsLong();
-			Long fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
+			String fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
 			MedicationRequest fhirResource = constructResource(fhirId, entity, includes);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);			
@@ -537,7 +517,7 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 				e.printStackTrace();
 			} 
 		
-		Long patientFhirId = patientReference.getReferenceElement().getIdPartAsLong();
+		String patientFhirId = patientReference.getReferenceElement().getIdPart();
 		Long omopFPersonId = IdMapping.getOMOPfromFHIR(patientFhirId, PatientResourceProvider.getType());
 
 		FPerson fPerson = fPersonService.findById(omopFPersonId);
@@ -623,7 +603,7 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 			if (EncounterResourceProvider.getType()
 					.equals(encounterReference.getReferenceElement().getResourceType())) {
 				// Get fhirIDLong.
-				Long fhirEncounterIdLong = encounterReference.getReferenceElement().getIdPartAsLong();
+				String fhirEncounterIdLong = encounterReference.getReferenceElement().getIdPart();
 				Long omopEncounterId = IdMapping.getOMOPfromFHIR(fhirEncounterIdLong, EncounterResourceProvider.getType());
 				if (omopEncounterId != null) {
 					VisitOccurrence visitOccurrence = visitOccurrenceService.findById(omopEncounterId);
@@ -666,8 +646,8 @@ public class OmopMedicationRequest extends BaseOmopResource<MedicationRequest, D
 		
 		Reference practitionerRef = fhirResource.getRecorder();
 		if (practitionerRef != null && !practitionerRef.isEmpty()) {
-			Long fhirPractitionerIdLong = 
-					practitionerRef.getReferenceElement().getIdPartAsLong();
+			String fhirPractitionerIdLong =
+					practitionerRef.getReferenceElement().getIdPart();
 			Long omopProviderId = IdMapping.getOMOPfromFHIR(fhirPractitionerIdLong, PractitionerResourceProvider.getType());
 			Provider provider = providerService.findById(omopProviderId);
 			if (provider != null) {

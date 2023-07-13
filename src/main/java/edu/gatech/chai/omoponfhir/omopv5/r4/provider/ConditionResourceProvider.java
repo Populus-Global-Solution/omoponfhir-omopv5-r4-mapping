@@ -107,7 +107,7 @@ public class ConditionResourceProvider implements IResourceProvider {
 	@Create()
 	public MethodOutcome createCondition(@ResourceParam Condition condition) {
 
-		Long id = null;
+		String id = null;
 		try {
 			id = myMapper.toDbase(condition, null);
 		} catch (FHIRException e) {
@@ -284,7 +284,7 @@ public class ConditionResourceProvider implements IResourceProvider {
 	public MethodOutcome updateCondition(@IdParam IdType theId, @ResourceParam Condition theCondition) {
 		validateResource(theCondition);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = myMapper.toDbase(theCondition, theId);
 		} catch (FHIRException e) {

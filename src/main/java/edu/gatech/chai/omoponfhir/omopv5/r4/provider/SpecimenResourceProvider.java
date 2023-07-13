@@ -105,7 +105,7 @@ public class SpecimenResourceProvider implements IResourceProvider {
 	public MethodOutcome createSpecimen(@ResourceParam Specimen theSpecimen) {
 		validateResource(theSpecimen);
 		
-		Long id = null;
+		String id = null;
 		try {
 			id = getMyMapper().toDbase(theSpecimen, null);
 		} catch (FHIRException e) {
@@ -251,7 +251,7 @@ public class SpecimenResourceProvider implements IResourceProvider {
 	public MethodOutcome updateSpecimen(@IdParam IdType theId, @ResourceParam Specimen theSpecimen) {
 		validateResource(theSpecimen);
 		
-		Long fhirId=null;
+		String fhirId=null;
 		try {
 			fhirId = getMyMapper().toDbase(theSpecimen, theId);
 		} catch (FHIRException e) {

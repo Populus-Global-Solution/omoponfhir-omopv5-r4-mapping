@@ -91,35 +91,16 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 		return OmopProcedure.omopProcedure;
 	}
 	
-	@Override
-	public Long toDbase(Procedure fhirResource, IdType fhirId) throws FHIRException {
-		Long omopId = null;
-		if (fhirId != null) {
-			// Update
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPartAsLong(), ProcedureResourceProvider.getType());
-		}
-		
-		ProcedureOccurrence procedureOccurrence = constructOmop(omopId, fhirResource);
-
-		Long OmopRecordId = null;
-		if (omopId == null) {
-			OmopRecordId = getMyOmopService().create(procedureOccurrence).getId();
-		} else {
-			OmopRecordId = getMyOmopService().update(procedureOccurrence).getId();
-		}
-		
-		return IdMapping.getFHIRfromOMOP(OmopRecordId, ProcedureResourceProvider.getType());
-	}
 
 	@Override
-	public Procedure constructResource(Long fhirId, ProcedureOccurrence entity, List<String> includes) {
+	public Procedure constructResource(String fhirId, ProcedureOccurrence entity, List<String> includes) {
 		Procedure procedure = constructFHIR(fhirId,entity); 
 		Long omopId = entity.getId();
 		
 		if (!includes.isEmpty()) {
 			if (includes.contains("Procedure:patient")) {
 				if (procedure.hasSubject()) {
-					Long patientFhirId = procedure.getSubject().getReferenceElement().getIdPartAsLong();
+					String patientFhirId = procedure.getSubject().getReferenceElement().getIdPart();
 					Patient patient = OmopPatient.getInstance().constructFHIR(patientFhirId, entity.getFPerson());
 					procedure.getSubject().setResource(patient);
 				}
@@ -130,7 +111,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 					List<ProcedurePerformerComponent> performers = procedure.getPerformer();
 					for (ProcedurePerformerComponent performer: performers) {
 						if (!performer.isEmpty()) {
-							Long practitionerFhirId = performer.getActor().getReferenceElement().getIdPartAsLong();
+							String practitionerFhirId = performer.getActor().getReferenceElement().getIdPart();
 							Practitioner practitioner = OmopPractitioner.getInstance().constructFHIR(practitionerFhirId, entity.getProvider());
 							performer.getActor().setResource(practitioner);
 						}
@@ -140,7 +121,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 
 			if (includes.contains("Procedure:context")) {
 				if (procedure.hasEncounter()) {
-					Long encounterFhirId = procedure.getEncounter().getReferenceElement().getIdPartAsLong();
+					String encounterFhirId = procedure.getEncounter().getReferenceElement().getIdPart();
 					Encounter encounter = OmopEncounter.getInstance().constructFHIR(encounterFhirId, entity.getVisitOccurrence());
 					procedure.getEncounter().setResource(encounter);
 				}
@@ -152,7 +133,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 	}
 
 	@Override
-	public Procedure constructFHIR(Long fhirId, ProcedureOccurrence entity) {
+	public Procedure constructFHIR(String fhirId, ProcedureOccurrence entity) {
 		Procedure procedure = new Procedure(); //Assuming default active state
 		procedure.setId(new IdType(fhirId));
 
@@ -203,7 +184,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 			ProcedurePerformerComponent performer = new ProcedurePerformerComponent();
 			
 			// actor mapping
-			Long providerFhirId = IdMapping.getFHIRfromOMOP(provider.getId(), PractitionerResourceProvider.getType());
+			String providerFhirId = IdMapping.getFHIRfromOMOP(provider.getId(), PractitionerResourceProvider.getType());
 			Reference actorReference = new Reference(new IdType(PractitionerResourceProvider.getType(), providerFhirId));
 			performer.setActor(actorReference);
 			
@@ -285,7 +266,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 			mapList.add(paramWrapper);
 			break;
 		case Procedure.SP_ENCOUNTER:
-			Long fhirEncounterId = ((ReferenceParam) value).getIdPartAsLong();
+			String fhirEncounterId = ((ReferenceParam) value).getIdPart();
 			Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(fhirEncounterId, EncounterResourceProvider.getType());
 //			String resourceName = ((ReferenceParam) value).getResourceType();
 			
@@ -331,7 +312,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 		case Procedure.SP_SUBJECT:
 		case Procedure.SP_PATIENT:
 			ReferenceParam patientReference = ((ReferenceParam) value);
-			Long fhirPatientId = patientReference.getIdPartAsLong();
+			String fhirPatientId = patientReference.getIdPart();
 			Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirPatientId, PatientResourceProvider.getType());
 
 			String omopPersonIdString = String.valueOf(omopPersonId);
@@ -345,7 +326,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 			break;
 		case Procedure.SP_PERFORMER:
 			// We only support provider (Practitioner).
-			Long fhirPractitionerId = ((ReferenceParam) value).getIdPartAsLong();
+			String fhirPractitionerId = ((ReferenceParam) value).getIdPart();
 			Long omopProviderId = IdMapping.getOMOPfromFHIR(fhirPractitionerId, PractitionerResourceProvider.getType());
 //			String performerResourceName = ((ReferenceParam) value).getResourceType();
 			
@@ -424,7 +405,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 		// Person mapping
 		Reference patientReference = fhirResource.getSubject();
 		if (patientReference.getReferenceElement().getResourceType().equals(PatientResourceProvider.getType())) {
-			Long patientFhirId = patientReference.getReferenceElement().getIdPartAsLong();
+			String patientFhirId = patientReference.getReferenceElement().getIdPart();
 			Long omopFPersonId = IdMapping.getOMOPfromFHIR(patientFhirId, PatientResourceProvider.getType());
 			if (omopFPersonId == null) {
 				throw new FHIRException("Unable to get OMOP person ID from FHIR patient ID");
@@ -444,7 +425,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 		Reference encounterReference = fhirResource.getEncounter();
 		if (encounterReference != null && !encounterReference.isEmpty() 
 			&& encounterReference.getReferenceElement().getResourceType().equals(EncounterResourceProvider.getType())) {
-			Long encounterFhirId = encounterReference.getReferenceElement().getIdPartAsLong();
+			String encounterFhirId = encounterReference.getReferenceElement().getIdPart();
 			Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(encounterFhirId, EncounterResourceProvider.getType());
 			if (omopVisitOccurrenceId == null) {
 				throw new FHIRException("Unable to get OMOP Visit Occurrence ID from FHIR encounter ID");
@@ -464,7 +445,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 		List<ProcedurePerformerComponent> performers = fhirResource.getPerformer();
 		for (ProcedurePerformerComponent performer: performers) {
 			if (performer.getActor().getReferenceElement().getResourceType().equals(PractitionerResourceProvider.getType())) {
-				Long performerFhirId = performer.getActor().getReferenceElement().getIdPartAsLong();
+				String performerFhirId = performer.getActor().getReferenceElement().getIdPart();
 				Long omopProviderId = IdMapping.getOMOPfromFHIR(performerFhirId, PractitionerResourceProvider.getType());
 				if (omopProviderId == null) continue;
 				Provider provider = providerService.findById(omopProviderId);

@@ -51,7 +51,7 @@ public class OmopConceptMap extends BaseOmopResource<ConceptMap, ConceptRelation
 	}
 	
 	@Override
-	public Long toDbase(ConceptMap fhirResource, IdType fhirId) throws FHIRException {
+	public String toDbase(ConceptMap fhirResource, IdType fhirId) throws FHIRException {
 		return null;
 	}
 
@@ -61,7 +61,7 @@ public class OmopConceptMap extends BaseOmopResource<ConceptMap, ConceptRelation
 	}
 
 	@Override
-	public ConceptMap constructFHIR(Long fhirId, ConceptRelationship entity) {
+	public ConceptMap constructFHIR(String fhirId, ConceptRelationship entity) {
 		return null;
 	}
 

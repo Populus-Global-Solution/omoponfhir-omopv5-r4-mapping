@@ -101,7 +101,7 @@ public class EncounterResourceProvider implements IResourceProvider {
 	public MethodOutcome createEncounter(@ResourceParam Encounter theEncounter) {
 		validateResource(theEncounter);
 
-		Long id = null;
+		String id = null;
 		try {
 			id = getMyMapper().toDbase(theEncounter, null);
 		} catch (FHIRException e) {
@@ -220,7 +220,7 @@ public class EncounterResourceProvider implements IResourceProvider {
 	public MethodOutcome updateEncounter(@IdParam IdType theId, @ResourceParam Encounter theEncounter) {
 		validateResource(theEncounter);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = getMyMapper().toDbase(theEncounter, theId);
 		} catch (FHIRException e) {

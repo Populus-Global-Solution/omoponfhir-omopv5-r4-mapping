@@ -88,7 +88,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 	}
 
 	@Override
-	public MyDeviceUseStatement constructResource(Long fhirId, DeviceExposure entity, List<String> includes) {
+	public MyDeviceUseStatement constructResource(String fhirId, DeviceExposure entity, List<String> includes) {
 		MyDeviceUseStatement deviceUseStatement = constructFHIR(fhirId, entity);
 		
 		if (!includes.isEmpty()) {
@@ -96,7 +96,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 				if (deviceUseStatement.hasDevice()) {
 					Reference deviceReference = deviceUseStatement.getDevice();
 					IIdType deviceReferenceId = deviceReference.getReferenceElement();
-					Long deviceReferenceFhirId = deviceReferenceId.getIdPartAsLong();
+					String deviceReferenceFhirId = deviceReferenceId.getIdPart();
 					MyDevice device = OmopDevice.getInstance().constructFHIR(deviceReferenceFhirId, entity);
 					deviceReference.setResource(device);
 				}
@@ -107,7 +107,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 	}
 
 	@Override
-	public MyDeviceUseStatement constructFHIR(Long fhirId, DeviceExposure entity) {
+	public MyDeviceUseStatement constructFHIR(String fhirId, DeviceExposure entity) {
 		MyDeviceUseStatement myDeviceUseStatement = new MyDeviceUseStatement();
 		myDeviceUseStatement.setId(new IdType(DeviceUseStatementResourceProvider.getType(), fhirId));
 		
@@ -148,7 +148,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		Provider provider = entity.getProvider();
 		if (provider != null) {
 			Long providerOmopId = provider.getId();
-			Long practitionerFhirId = IdMapping.getFHIRfromOMOP(providerOmopId, PractitionerResourceProvider.getType());
+			String practitionerFhirId = IdMapping.getFHIRfromOMOP(providerOmopId, PractitionerResourceProvider.getType());
 			myDeviceUseStatement.setSource(new Reference(new IdType(PractitionerResourceProvider.getType(),practitionerFhirId)));
 		}
 		
@@ -156,11 +156,11 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 	}
 	
 	@Override
-	public Long toDbase(MyDeviceUseStatement fhirResource, IdType fhirId) throws FHIRException {
+	public String toDbase(MyDeviceUseStatement fhirResource, IdType fhirId) throws FHIRException {
 		Long omopId = null;
 		if (fhirId != null) {
 			// Search for this ID.
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPartAsLong(), DeviceUseStatementResourceProvider.getType());
+			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), DeviceUseStatementResourceProvider.getType());
 		}
 		
 		DeviceExposure deviceExposure = constructOmop(omopId, fhirResource);
@@ -283,7 +283,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 			return null;
 		}
 		
-		Long patientId = subjectReference.getIdPartAsLong();
+		String patientId = subjectReference.getIdPart();
 		Long omopPersonId = IdMapping.getOMOPfromFHIR(patientId, PatientResourceProvider.getType());
 		FPerson fPerson = fPersonService.findById(omopPersonId);
 		if (fPerson == null) {
@@ -316,7 +316,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		Reference practitionerSource = deviceUseStatement.getSource();
 		if (practitionerSource != null && !practitionerSource.isEmpty()) {
 			IIdType practitionerReference = practitionerSource.getReferenceElement();
-			Long practitionerId = practitionerReference.getIdPartAsLong();
+			String practitionerId = practitionerReference.getIdPart();
 			Long omopProviderId = IdMapping.getOMOPfromFHIR(practitionerId, PractitionerResourceProvider.getType());
 			Provider provider = providerService.findById(omopProviderId);
 			if (provider == null) {

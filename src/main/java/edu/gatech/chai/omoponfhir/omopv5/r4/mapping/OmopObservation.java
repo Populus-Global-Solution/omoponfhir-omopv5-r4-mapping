@@ -137,7 +137,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 	}
 
 	@Override
-	public Observation constructFHIR(Long fhirId, FObservationView fObservationView) {
+	public Observation constructFHIR(String fhirId, FObservationView fObservationView) {
 		Observation observation = new Observation();
 		observation.setId(new IdType(fhirId));
 
@@ -512,7 +512,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 			throw new FHIRException("Either systolic or diastolic needs to be available in component");
 		}
 
-		Long fhirSubjectId = fhirResource.getSubject().getReferenceElement().getIdPartAsLong();
+		String fhirSubjectId = fhirResource.getSubject().getReferenceElement().getIdPart();
 		Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
 		FPerson tPerson = new FPerson();
 		tPerson.setId(omopPersonId);
@@ -740,7 +740,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 		if (contextReference != null && !contextReference.isEmpty()) {
 			if (contextReference.getReferenceElement().getResourceType().equals(EncounterResourceProvider.getType())) {
 				// Encounter context.
-				Long fhirEncounterId = contextReference.getReferenceElement().getIdPartAsLong();
+				String fhirEncounterId = contextReference.getReferenceElement().getIdPart();
 				Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(fhirEncounterId,
 						EncounterResourceProvider.getType());
 				if (omopVisitOccurrenceId != null) {
@@ -825,8 +825,8 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 
 	@Override
 	public Long removeByFhirId(IdType fhirId) {
-		Long id_long_part = fhirId.getIdPartAsLong();
-		Long myId = IdMapping.getOMOPfromFHIR(id_long_part, getMyFhirResourceType());
+		String idPart = fhirId.getIdPart();
+		Long myId = IdMapping.getOMOPfromFHIR(idPart, getMyFhirResourceType());
 		if (myId < 0) {
 			// This is observation table.
 			return observationService.removeById(myId);
@@ -902,8 +902,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 		String idString = fhirResource.getSubject().getReferenceElement().getIdPart();
 
 		try {
-			Long fhirSubjectId = Long.parseLong(idString);
-			Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
+			Long omopPersonId = IdMapping.getOMOPfromFHIR(idString, PatientResourceProvider.getType());
 
 			FPerson tPerson = new FPerson();
 			tPerson.setId(omopPersonId);
@@ -1134,7 +1133,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 			observation.setObservationSourceValue(identifier.getValue());
 		}
 
-		Long fhirSubjectId = fhirResource.getSubject().getReferenceElement().getIdPartAsLong();
+		String fhirSubjectId = fhirResource.getSubject().getReferenceElement().getIdPart();
 		Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
 
 		FPerson tPerson = new FPerson();
@@ -1336,7 +1335,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 		if (contextReference != null && !contextReference.isEmpty()) {
 			if (contextReference.getReferenceElement().getResourceType().equals(EncounterResourceProvider.getType())) {
 				// Encounter context.
-				Long fhirEncounterId = contextReference.getReferenceElement().getIdPartAsLong();
+				String fhirEncounterId = contextReference.getReferenceElement().getIdPart();
 				Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(fhirEncounterId,
 						EncounterResourceProvider.getType());
 				if (omopVisitOccurrenceId != null) {
@@ -1485,7 +1484,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 					+ " for subject. But provided [" + subjectReference.getReferenceElement().getResourceType() + "]");
 		}
 
-		Long fhirSubjectId = subjectReference.getReferenceElement().getIdPartAsLong();
+		String fhirSubjectId = subjectReference.getReferenceElement().getIdPart();
 		Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
 		if (omopPersonId == null) {
 			throw new FHIRException("We couldn't find the patient in the Subject");
@@ -1493,12 +1492,13 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 	}
 
 	@Override
-	public Long toDbase(Observation fhirResource, IdType fhirId) throws FHIRException {
-		Long fhirIdLong = null;
+	public String toDbase(Observation fhirResource, IdType fhirId) throws FHIRException {
+		String fhirIdString = null;
 		Long omopId = null;
+
 		if (fhirId != null) {
-			fhirIdLong = fhirId.getIdPartAsLong();
-			omopId = IdMapping.getOMOPfromFHIR(fhirIdLong, ObservationResourceProvider.getType());
+			fhirIdString = fhirId.getIdPart();
+			omopId = IdMapping.getOMOPfromFHIR(fhirIdString, ObservationResourceProvider.getType());
 			if (omopId < 0) {
 				// This is observation table data in OMOP.
 				omopId = -omopId; // convert to positive number;
@@ -1506,7 +1506,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 		} else {
 			// check if we already have this entry by comparing
 			// code, date, time and patient
-			Long patientFhirId = fhirResource.getSubject().getReferenceElement().getIdPartAsLong();
+			String patientFhirId = fhirResource.getSubject().getReferenceElement().getIdPart();
 
 			// get date and time
 			Date date = null;
@@ -1570,8 +1570,8 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 				searchWithParams(0, 0, paramList, resources, includes, null);
 				if (!resources.isEmpty()) {
 					IBaseResource res = resources.get(0);
-					fhirIdLong = res.getIdElement().getIdPartAsLong();
-					omopId = IdMapping.getOMOPfromFHIR(fhirIdLong, ObservationResourceProvider.getType());
+					fhirIdString = res.getIdElement().getIdPart();
+					omopId = IdMapping.getOMOPfromFHIR(fhirIdString, ObservationResourceProvider.getType());
 					if (omopId < 0) {
 						// This is observation table data in OMOP.
 						omopId = -omopId; // convert to positive number;
@@ -1695,7 +1695,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 		List<Reference> focusReferences = fhirResource.getFocus();
 		for (Reference focusReference : focusReferences) {
 			IIdType referenceElement = focusReference.getReferenceElement();
-			logger.debug("Target Focus Reference (" + focusReference.getReference() + "): " + referenceElement.getIdPart() + " " + referenceElement.getIdPartAsLong());
+			logger.debug("Target Focus Reference (" + focusReference.getReference() + "): " + referenceElement.getIdPart() + " " + referenceElement.getIdPart());
 			createFactRelationship(domainConceptId, retId, focusReference, 44818759L);
 		}
 
@@ -1710,7 +1710,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 			}
 		}
 
-		return retId;
+		return IdMapping.getFHIRfromOMOP(retId, getMyFhirResourceType());
 	}
 
 	private void createFactRelationship(Date noteDate, FPerson noteFPerson, String noteText, Long domainConceptId1,
@@ -1810,7 +1810,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 		}
 
 		String targetResourceType = referenceIdType.getResourceType();
-		Long factId2 = referenceIdType.getIdPartAsLong();
+		Long factId2 = IdMapping.getOMOPfromFHIR(referenceIdType.getIdPart(), targetResourceType);
 
 		Long domainConceptId2;
 		if (MedicationStatementResourceProvider.getType().equals(targetResourceType)) {
@@ -1940,7 +1940,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 
 		for (FObservationView fObservationView : fObservationViews) {
 			Long omopId = fObservationView.getId();
-			Long fhirId = IdMapping.getFHIRfromOMOP(omopId, ObservationResourceProvider.getType());
+			String fhirId = IdMapping.getFHIRfromOMOP(omopId, ObservationResourceProvider.getType());
 			Observation fhirResource = constructResource(fhirId, fObservationView, includes);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);

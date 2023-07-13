@@ -181,7 +181,7 @@ public class DeviceResourceProvider implements IResourceProvider {
 	public MethodOutcome updateDevice(@IdParam IdType theId, @ResourceParam MyDevice theDevice) {
 		validateResource(theDevice);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = getMyMapper().toDbase(theDevice, theId);
 		} catch (FHIRException e) {

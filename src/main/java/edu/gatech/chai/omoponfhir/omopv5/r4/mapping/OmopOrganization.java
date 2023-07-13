@@ -75,7 +75,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 	}
 	
 	@Override
-	public Organization constructFHIR(Long fhirId, CareSite careSite) {
+	public Organization constructFHIR(String fhirId, CareSite careSite) {
 		Organization organization = new Organization();
 
 		organization.setId(new IdType(fhirId));
@@ -108,13 +108,13 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 	}
 
 	@Override
-	public Long toDbase(Organization organization, IdType fhirId) throws FHIRException {
+	public String toDbase(Organization organization, IdType fhirId) throws FHIRException {
 		// If fhirId is null, then it's CREATE.
 		// If fhirId is not null, then it's UPDATE.
 
 		Long omopId = null;
 		if (fhirId != null) {
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPartAsLong(), OrganizationResourceProvider.getType());
+			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), OrganizationResourceProvider.getType());
 		} else {
 			// Get the identifier to store the source information.
 			// If we found a matching one, replace this with the careSite.
@@ -145,8 +145,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 			omopRecordId = getMyOmopService().create(careSite).getId();
 		}
 		
-		Long fhirRecordId = IdMapping.getFHIRfromOMOP(omopRecordId, OrganizationResourceProvider.getType());
-		return fhirRecordId;
+		return IdMapping.getFHIRfromOMOP(omopRecordId, OrganizationResourceProvider.getType());
 	}
 
 //	@Override
@@ -160,7 +159,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 	
 
 	@Override
-	public Organization constructResource(Long fhirId, CareSite entity, List<String> includes) {
+	public Organization constructResource(String fhirId, CareSite entity, List<String> includes) {
 		Organization myOrganization = constructFHIR(fhirId, entity);
 		
 		if (!includes.isEmpty()) {
@@ -168,7 +167,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 				Reference partOfOrganization = myOrganization.getPartOf();
 				if (partOfOrganization != null && partOfOrganization.isEmpty() == false) {
 					IIdType partOfOrgId = partOfOrganization.getReferenceElement();
-					Long partOfOrgFhirId = partOfOrgId.getIdPartAsLong();
+					String partOfOrgFhirId = partOfOrgId.getIdPart();
 					Long omopId = IdMapping.getOMOPfromFHIR(partOfOrgFhirId, OrganizationResourceProvider.getType());
 					CareSite partOfCareSite = getMyOmopService().findById(omopId);
 					Organization partOfOrgResource = constructFHIR(partOfOrgFhirId, partOfCareSite);

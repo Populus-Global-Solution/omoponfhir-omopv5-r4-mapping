@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import edu.gatech.chai.omoponfhir.omopv5.r4.mapping.IdMapping;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.DateType;
 import org.hl7.fhir.r4.model.IdType;
@@ -131,7 +132,7 @@ public class PatientResourceProvider implements IResourceProvider {
 	public MethodOutcome createPatient(@ResourceParam USCorePatient thePatient) {
 		validateResource(thePatient);
 
-		Long id = null;
+		String id = null;
 		try {
 			id = getMyMapper().toDbase(thePatient, null);
 		} catch (FHIRException e) {
@@ -356,7 +357,7 @@ public class PatientResourceProvider implements IResourceProvider {
 	public MethodOutcome updatePatient(@IdParam IdType theId, @ResourceParam USCorePatient thePatient) {
 		validateResource(thePatient);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = getMyMapper().toDbase(thePatient, theId);
 		} catch (FHIRException e) {
@@ -392,7 +393,8 @@ public class PatientResourceProvider implements IResourceProvider {
 		List<IBaseResource> resources = new ArrayList<IBaseResource>();
 		resources.add(getMyMapper().toFHIR(thePatientId));
 
-		getMyMapper().getEverthingfor(resources, thePatientId.getIdPartAsLong(), startDate, endDate);
+		Long omopPatientId = IdMapping.getOMOPfromFHIR(thePatientId.getId(), thePatientId.getResourceType());
+		getMyMapper().getEverthingfor(resources, omopPatientId, startDate, endDate);
 		
 		final List<IBaseResource> retv = resources;
 		final Integer totalsize = retv.size();

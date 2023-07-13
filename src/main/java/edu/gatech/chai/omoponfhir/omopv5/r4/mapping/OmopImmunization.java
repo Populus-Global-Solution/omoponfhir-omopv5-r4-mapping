@@ -124,25 +124,6 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 	}
 
 	@Override
-	public Long toDbase(Immunization fhirResource, IdType fhirId) throws FHIRException {
-		Long omopId = null;
-		DrugExposure drugExposure = null;
-		if (fhirId != null) {
-			omopId = fhirId.getIdPartAsLong();
-		}
-
-		drugExposure = constructDrugExposure(omopId, fhirResource);
-
-		Long retOmopId = null;
-		if (omopId == null) {
-			retOmopId = drugExposureService.create(drugExposure).getId();
-		} else {
-			retOmopId = drugExposureService.update(drugExposure).getId();
-		}
-		return retOmopId;
-	}
-
-	@Override
 	public List<ParameterWrapper> mapParameter(String parameter, Object value, boolean or) {
 		List<ParameterWrapper> mapList = new ArrayList<ParameterWrapper>();
 		ParameterWrapper paramWrapper = new ParameterWrapper();
@@ -335,7 +316,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 
 			case Immunization.SP_PATIENT:
 				ReferenceParam patientReference = ((ReferenceParam) value);
-				Long fhirPatientId = patientReference.getIdPartAsLong();
+				String fhirPatientId = patientReference.getIdPart();
 				String omopPersonIdString = String.valueOf(fhirPatientId);
 
 				whereStatement = "p.id = @patient";
@@ -384,7 +365,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 	}
 
 	@Override
-	public Immunization constructFHIR(Long fhirId, FImmunizationView entity) {
+	public Immunization constructFHIR(String fhirId, FImmunizationView entity) {
 		Immunization immunization = new Immunization();
 		immunization.setId(new IdType(fhirId));
 
@@ -497,7 +478,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 		if (patientReference == null)
 			throw new FHIRException("Patient must exist.");
 
-		Long omopFPersonId = patientReference.getReferenceElement().getIdPartAsLong();
+		Long omopFPersonId = IdMapping.getOMOPfromFHIR(patientReference.getReferenceElement().getIdPart(), patientReference.getType());
 
 		FPerson fPerson = fPersonService.findById(omopFPersonId);
 		if (fPerson == null)
@@ -565,21 +546,25 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 		if (!performer.isEmpty()) {
 			Reference performerActorReference = performer.getActor();
 			if (!performerActorReference.isEmpty()) {
-				Long performerId = performerActorReference.getReferenceElement().getIdPartAsLong();
-				Provider provider = providerService.findById(performerId);
+				String performerId = performerActorReference.getReferenceElement().getIdPart();
+				Long omopProviderId = IdMapping.getOMOPfromFHIR(performerId, performer.getActor().getType());
+
+				Provider provider = providerService.findById(omopProviderId);
 				if (provider == null) {
 					throw new FHIRException("performer (" + performerId + ") does not exist");
 				}
 			
-				drugExposure.setProvider(new Provider(performerId));
+				drugExposure.setProvider(new Provider(omopProviderId));
 			}
 		}
 		
 		// encounter
 		Reference encounterReference = fhirResource.getEncounter();
 		if (!encounterReference.isEmpty()) {
-			Long encounterId = encounterReference.getReferenceElement().getIdPartAsLong();
-			VisitOccurrence visitOccurrence = visitOccurrenceService.findById(encounterId);
+			String encounterId = encounterReference.getReferenceElement().getIdPart();
+			Long omopEncounterId = IdMapping.getOMOPfromFHIR(encounterId, fhirResource.getEncounter().getType());
+
+			VisitOccurrence visitOccurrence = visitOccurrenceService.findById(omopEncounterId);
 			if (visitOccurrence == null) {
 				throw new FHIRException("encounter (" + encounterId + ") does not exist");
 			}

@@ -101,7 +101,7 @@ public class MedicationStatementResourceProvider implements IResourceProvider {
 	public MethodOutcome createMedicationStatement(@ResourceParam MedicationStatement theMedicationStatement) {
 		validateResource(theMedicationStatement);
 
-		Long id = null;
+		String id = null;
 		try {
 			id = myMapper.toDbase(theMedicationStatement, null);
 		} catch (FHIRException e) {
@@ -131,7 +131,7 @@ public class MedicationStatementResourceProvider implements IResourceProvider {
 			@ResourceParam MedicationStatement theMedicationStatement) {
 		validateResource(theMedicationStatement);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = myMapper.toDbase(theMedicationStatement, theId);
 		} catch (FHIRException e) {

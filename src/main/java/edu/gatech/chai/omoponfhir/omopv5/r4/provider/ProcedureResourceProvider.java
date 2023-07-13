@@ -102,7 +102,7 @@ public class ProcedureResourceProvider implements IResourceProvider {
 	public MethodOutcome createProcedure(@ResourceParam Procedure theProcedure) {
 		validateResource(theProcedure);
 
-		Long id = null;
+		String id = null;
 		try {
 			id = myMapper.toDbase(theProcedure, null);
 		} catch (FHIRException e) {
@@ -126,7 +126,7 @@ public class ProcedureResourceProvider implements IResourceProvider {
 	public MethodOutcome updateProcedure(@IdParam IdType theId, @ResourceParam Procedure theProcedure) {
 		validateResource(theProcedure);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = myMapper.toDbase(theProcedure, theId);
 		} catch (FHIRException e) {

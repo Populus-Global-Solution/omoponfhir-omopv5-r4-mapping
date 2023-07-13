@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.StringType;
@@ -97,15 +98,15 @@ public class OmopTransaction {
 		list.add(entity);
 	}
 
-	private IdType linkToPatient(Reference subject, Map<String, Long> patientMap) {
+	private IdType linkToPatient(Reference subject, Map<String, String> patientMap) {
 		if (subject == null || subject.isEmpty()) {
 			// We must have subject information to link this to patient.
 			// This is OMOP requirement. We skip this for Transaction Messages.
 			return null;
 		}
 
-		Long fhirId = patientMap.get(subject.getReference());
-		if (fhirId == null || fhirId == 0L) {
+		String fhirId = patientMap.get(subject.getReference());
+		if (StringUtils.isEmpty(fhirId)) {
 			// See if we have this patient in OMOP DB.
 			IIdType referenceIdType = subject.getReferenceElement();
 			if (referenceIdType == null || referenceIdType.isEmpty()) {
@@ -113,12 +114,12 @@ public class OmopTransaction {
 				return null;
 			}
 			try {
-				fhirId = referenceIdType.getIdPartAsLong();
+				fhirId = referenceIdType.getIdPart();
 			} catch (Exception e) {
 				// Giving up...
 				return null;
 			}
-			if (fhirId == null || fhirId == 0L) {
+			if (StringUtils.isEmpty(fhirId)) {
 				// giving up again...
 				return null;
 			}
@@ -157,14 +158,14 @@ public class OmopTransaction {
 		List<Resource> putList = (List<Resource>) entries.get(HTTPVerb.PUT);
 		List<Resource> getList = (List<Resource>) entries.get(HTTPVerb.GET);
 
-		Map<String, Long> patientMap = new HashMap<String, Long>();
+		Map<String, String> patientMap = new HashMap<>();
 
 		// do patient first.
 		for (Resource resource : postList) {
 			if (resource.getResourceType() == ResourceType.Patient) {
 				String originalId = resource.getId();
 
-				Long fhirId = OmopPatient.getInstance().toDbase(ExtensionUtil.usCorePatientFromResource(resource),
+				String fhirId = OmopPatient.getInstance().toDbase(ExtensionUtil.usCorePatientFromResource(resource),
 						null);
 				patientMap.put(originalId, fhirId);
 				logger.debug("Adding patient info to patientMap " + originalId + "->" + fhirId);
@@ -184,8 +185,8 @@ public class OmopTransaction {
 				}
 				medicationStatement.setSubject(new Reference(refIdType));
 
-				Long fhirId = OmopMedicationStatement.getInstance().toDbase(medicationStatement, null);
-				if (fhirId == null || fhirId == 0L) {
+				String fhirId = OmopMedicationStatement.getInstance().toDbase(medicationStatement, null);
+				if (StringUtils.isEmpty(fhirId)) {
 					addResponseEntry(responseEntries, "400 Bad Request", null);
 				} else {
 					addResponseEntry(responseEntries, "201 Created", "MedicationStatement/" + fhirId);
@@ -203,8 +204,8 @@ public class OmopTransaction {
 					continue;
 				condition.setSubject(new Reference(refIdType));
 
-				Long fhirId = OmopCondition.getInstance().toDbase(condition, null);
-				if (fhirId == null || fhirId == 0L) {
+				String fhirId = OmopCondition.getInstance().toDbase(condition, null);
+				if (StringUtils.isEmpty(fhirId)) {
 					addResponseEntry(responseEntries, "400 Bad Request", null);
 				} else {
 					addResponseEntry(responseEntries, "201 Created", "Condition/" + fhirId);
@@ -222,11 +223,12 @@ public class OmopTransaction {
 					continue;
 				observation.setSubject(new Reference(refIdType));
 
-				Long fhirId = OmopObservation.getInstance().toDbase(observation, null);
-				if (fhirId == null)
+				String fhirId = OmopObservation.getInstance().toDbase(observation, null);
+				if (fhirId == null) {
 					addResponseEntry(responseEntries, "400 Bad Request", null);
-				else
+				} else {
 					addResponseEntry(responseEntries, "201 Created", "Observation/" + fhirId);
+				}
 			} 
 		}
 
@@ -240,7 +242,7 @@ public class OmopTransaction {
 				}
 				documentReference.setSubject(new Reference(refIdType));
 
-				Long fhirId = OmopDocumentReference.getInstance().toDbase(documentReference, null);
+				String fhirId = OmopDocumentReference.getInstance().toDbase(documentReference, null);
 				if (fhirId == null)
 					addResponseEntry(responseEntries, "400 Bad Request", null);
 				else
@@ -253,7 +255,7 @@ public class OmopTransaction {
 				// This is PUT. We must have fhirId that we want to update.
 				USCorePatient patient = ExtensionUtil.usCorePatientFromResource(resource);
 				IdType fhirIdType = patient.getIdElement();
-				Long fhirId = OmopPatient.getInstance().toDbase(patient, fhirIdType);
+				String fhirId = OmopPatient.getInstance().toDbase(patient, fhirIdType);
 				patientMap.put(resource.getId(), fhirId);
 
 				addResponseEntry(responseEntries, "201 Created", "Patient/" + fhirId);
@@ -266,7 +268,7 @@ public class OmopTransaction {
 				observation.setSubject(new Reference(refIdType));
 
 				IdType fhirIdType = observation.getIdElement();
-				Long fhirId = OmopObservation.getInstance().toDbase(observation, fhirIdType);
+				String fhirId = OmopObservation.getInstance().toDbase(observation, fhirIdType);
 
 				addResponseEntry(responseEntries, "201 Created", "Observation/" + fhirId);
 			}

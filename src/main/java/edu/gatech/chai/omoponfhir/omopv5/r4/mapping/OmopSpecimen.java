@@ -88,7 +88,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 	}
 
 	@Override
-	public Specimen constructFHIR(Long fhirId, edu.gatech.chai.omopv5.model.entity.Specimen specimen_) {
+	public Specimen constructFHIR(String fhirId, edu.gatech.chai.omopv5.model.entity.Specimen specimen_) {
 		Specimen specimen = new Specimen();
 
 		specimen.setId(new IdType(fhirId));
@@ -193,14 +193,6 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 		return specimen;
 	}
 
-	@Override
-	public Long removeByFhirId(IdType fhirId) {
-		Long id_long_part = fhirId.getIdPartAsLong();
-		Long myId = IdMapping.getOMOPfromFHIR(id_long_part, getMyFhirResourceType());
-
-		return getMyOmopService().removeById(myId);
-	}
-	
 	@Override
 	public String constructOrderParams(SortSpec theSort) {
 		if (theSort == null) return "id ASC";
@@ -320,7 +312,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 		}
 
 		// FHIR Specimen.subject --> OMOP Specimen.person_id
-		Long fhirSubjectId = fhirResource.getSubject().getReferenceElement().getIdPartAsLong();
+		String fhirSubjectId = fhirResource.getSubject().getReferenceElement().getIdPart();
 		Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
 
 		FPerson tPerson = new FPerson();
@@ -402,7 +394,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 					+ " for subject. But provided [" + subjectReference.getReferenceElement().getResourceType() + "]");
 		}
 
-		Long fhirSubjectId = subjectReference.getReferenceElement().getIdPartAsLong();
+		String fhirSubjectId = subjectReference.getReferenceElement().getIdPart();
 		Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
 		if (omopPersonId == null) {
 			throw new FHIRException("We couldn't find the patient in the Subject");
@@ -410,18 +402,18 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 	}
 
 	@Override
-	public Long toDbase(Specimen fhirResource, IdType fhirId) throws FHIRException {
-		Long fhirIdLong = null;
+	public String toDbase(Specimen fhirResource, IdType fhirId) throws FHIRException {
+		String fhirIdString = null;
 		Long omopId = null;
 
 		// fhirResource validation. This will throw if validation failed. 
 		validation(fhirResource, fhirId);
 
 		if (fhirId != null) {
-			fhirIdLong = fhirId.getIdPartAsLong();
-			omopId = IdMapping.getOMOPfromFHIR(fhirIdLong, SpecimenResourceProvider.getType());
+			fhirIdString = fhirId.getIdPart();
+			omopId = IdMapping.getOMOPfromFHIR(fhirIdString, SpecimenResourceProvider.getType());
 		} else {
-			Long patientFhirId = fhirResource.getSubject().getReferenceElement().getIdPartAsLong();
+			String patientFhirId = fhirResource.getSubject().getReferenceElement().getIdPart();
 
 			// get specimen concept, which is specimen type in FHIR
 			CodeableConcept specimenType = fhirResource.getType();

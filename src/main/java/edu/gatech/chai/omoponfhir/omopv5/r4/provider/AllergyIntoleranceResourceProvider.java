@@ -102,7 +102,7 @@ public class AllergyIntoleranceResourceProvider implements IResourceProvider {
 	@Create()
 	public MethodOutcome createAllergyIntolerance(@ResourceParam AllergyIntolerance allergyIntolerance) {
 
-		Long id = null;
+		String id = null;
 		try {
 			id = myMapper.toDbase(allergyIntolerance, null);
 		} catch (FHIRException e) {
@@ -251,7 +251,7 @@ public class AllergyIntoleranceResourceProvider implements IResourceProvider {
 	 *
 	 * @param theId
 	 *            This is the ID of the patient to update
-	 * @param theCondition
+	 * @param theAllergyIntolerance
 	 *            This is the actual resource to save
 	 * @return This method returns a "MethodOutcome"
 	 */
@@ -259,7 +259,7 @@ public class AllergyIntoleranceResourceProvider implements IResourceProvider {
 	public MethodOutcome updateAllergyIntolerance(@IdParam IdType theId, @ResourceParam AllergyIntolerance theAllergyIntolerance) {
 		validateResource(theAllergyIntolerance);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = myMapper.toDbase(theAllergyIntolerance, theId);
 		} catch (FHIRException e) {

@@ -28,18 +28,18 @@ import edu.gatech.chai.omopv5.model.entity.BaseEntity;
 
 public interface IResourceMapping<v extends Resource, t extends BaseEntity> {
 	public v toFHIR(IdType id);
-	public Long toDbase(v fhirResource, IdType fhirId) throws FHIRException;
+	public String toDbase(v fhirResource, IdType fhirId) throws FHIRException;
 	public void removeDbase(Long id);
 	public Long removeByFhirId (IdType fhirId) throws FHIRException;
 	public Long getSize();
 	public Long getSize(List<ParameterWrapper> mapList);
 
-	public v constructResource(Long fhirId, t entity, List<String> includes);
+	public v constructResource(String fhirId, t entity, List<String> includes);
 	public void searchWithoutParams(int fromIndex, int toIndex, List<IBaseResource> listResources, List<String> includes, String sort);
 	public void searchWithParams(int fromIndex, int toIndex, List<ParameterWrapper> map, List<IBaseResource> listResources, List<String> includes, String sort);
 
 	public List<ParameterWrapper> mapParameter(String parameter, Object value, boolean or);
-	public v constructFHIR(Long fhirId, t entity);
+	public v constructFHIR(String fhirId, t entity);
 	public t constructOmop(Long omopId, v fhirResource);
 	
 	public String constructOrderParams(SortSpec theSort);

@@ -64,12 +64,12 @@ public class OmopMedication extends BaseOmopResource<Medication, Concept, Concep
 	}
 	
 	@Override
-	public Long toDbase(Medication fhirResource, IdType fhirId) throws FHIRException {
+	public String toDbase(Medication fhirResource, IdType fhirId) throws FHIRException {
 		throw new FHIRException("Medication Resource is Read-Only");
 	}
 
 	@Override
-	public Medication constructFHIR(Long fhirId, Concept entity) {
+	public Medication constructFHIR(String fhirId, Concept entity) {
 		Medication medication = new Medication();
 		
 		medication.setId(new IdType(fhirId));
@@ -208,7 +208,7 @@ public class OmopMedication extends BaseOmopResource<Medication, Concept, Concep
 
 		for (Concept entity : entities) {
 			Long omopId = entity.getIdAsLong();
-			Long fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
+			String fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
 			Medication fhirResource = constructResource(fhirId, entity, includes);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);			

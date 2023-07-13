@@ -121,7 +121,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 	}
 
 	@Override
-	public USCorePatient constructResource(Long fhirId, FPerson entity, List<String> includes) {
+	public USCorePatient constructResource(String fhirId, FPerson entity, List<String> includes) {
 		USCorePatient patient = constructFHIR(fhirId, entity);
 		Long omopId = entity.getId();
 
@@ -134,7 +134,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 							// We map generalPractitioner to Provider, which is
 							// Practitioner.
 							IIdType generalPractitionerId = generalPractitioner.getReferenceElement();
-							Long generalPractFhirId = generalPractitionerId.getIdPartAsLong();
+							String generalPractFhirId = generalPractitionerId.getIdPart();
 							Practitioner practitioner = OmopPractitioner.getInstance().constructFHIR(generalPractFhirId,
 									entity.getProvider());
 							generalPractitioner.setResource(practitioner);
@@ -147,7 +147,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 				if (patient.hasManagingOrganization()) {
 					Reference managingOrganization = patient.getManagingOrganization();
 					IIdType managingOrganizationId = managingOrganization.getReferenceElement();
-					Long manageOrgFhirId = managingOrganizationId.getIdPartAsLong();
+					String manageOrgFhirId = managingOrganizationId.getIdPart();
 					Organization organization = OmopOrganization.getInstance().constructFHIR(manageOrgFhirId,
 							entity.getCareSite());
 					patient.getManagingOrganization().setResource(organization);
@@ -167,10 +167,10 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 							Patient linkedPatient;
 							if (patientLinkOther.fhirType().equals(PatientResourceProvider.getType())) {
 								FPerson linkedPerson = getMyOmopService().findById(omopId);
-								linkedPatient = constructFHIR(patientLinkOtherId.getIdPartAsLong(), linkedPerson);
+								linkedPatient = constructFHIR(patientLinkOtherId.getIdPart(), linkedPerson);
 							} else {
 								FPerson linkedPerson = getMyOmopService().findById(omopId);
-								linkedPatient = constructFHIR(patientLinkOtherId.getIdPartAsLong(), linkedPerson);
+								linkedPatient = constructFHIR(patientLinkOtherId.getIdPart(), linkedPerson);
 							}
 							patientLink.getOther().setResource(linkedPatient);
 						}
@@ -182,7 +182,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 	}
 
 	@Override
-	public USCorePatient constructFHIR(Long fhirId, FPerson fPerson) {
+	public USCorePatient constructFHIR(String fhirId, FPerson fPerson) {
 		USCorePatient patient = new USCorePatient();
 		patient.setId(new IdType(fhirId));
 
@@ -305,7 +305,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 		}
 
 		if (fPerson.getProvider() != null && fPerson.getProvider().getId() != 0L) {
-			Long genPracFhirId = IdMapping.getFHIRfromOMOP(fPerson.getProvider().getId(),
+			String genPracFhirId = IdMapping.getFHIRfromOMOP(fPerson.getProvider().getId(),
 					PractitionerResourceProvider.getType());
 			Reference generalPractitioner = new Reference(
 					new IdType(PractitionerResourceProvider.getType(), genPracFhirId));
@@ -316,7 +316,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 		}
 
 		if (fPerson.getCareSite() != null && fPerson.getCareSite().getId() != 0L) {
-			Long manageOrgFhirId = IdMapping.getFHIRfromOMOP(fPerson.getCareSite().getId(),
+			String manageOrgFhirId = IdMapping.getFHIRfromOMOP(fPerson.getCareSite().getId(),
 					OrganizationResourceProvider.getType());
 			Reference managingOrganization = new Reference(
 					new IdType(OrganizationResourceProvider.getType(), manageOrgFhirId));
@@ -477,43 +477,6 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 		return personSourceValue;
 	}
 
-	/**
-	 * OMOP on FHIR mapping - from FHIR to OMOP
-	 * 
-	 * @param Patient resource.
-	 * @param IdType  fhirId that you want to update
-	 * 
-	 * @return Resource ID. Returns ID in Long. This is what needs to be used to
-	 *         refer this resource.
-	 */
-	@Override
-	public Long toDbase(USCorePatient patient, IdType fhirId) throws FHIRException {
-		Long omopId = null, fhirIdLong = null;
-
-		if (fhirId != null) {
-			// update
-			fhirIdLong = fhirId.getIdPartAsLong();
-			if (fhirIdLong == null) {
-				// Invalid fhirId.
-				logger.error("Failed to get Patient.id as Long value");
-				return null;
-			}
-			
-			omopId = IdMapping.getOMOPfromFHIR(fhirIdLong, PatientResourceProvider.getType());
-		}
-
-		FPerson fperson = constructOmop(omopId, patient);
-
-		Long omopRecordId = null;
-		if (fperson.getId() != null) {
-			omopRecordId = getMyOmopService().update(fperson).getId();
-		} else {
-			omopRecordId = getMyOmopService().create(fperson).getId();
-		}
-		Long fhirRecordId = IdMapping.getFHIRfromOMOP(omopRecordId, PatientResourceProvider.getType());
-		return fhirRecordId;
-	}
-
 	@Override
 	public void addRevIncludes(Long omopId, List<String> includes, List<IBaseResource> listResources) {
 		List<ParameterWrapper> mapList = new ArrayList<ParameterWrapper>();
@@ -526,7 +489,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 
 			List<VisitOccurrence> VisitOccurrences = visitOccurrenceService.searchWithParams(0, 0, mapList, null);
 			for (VisitOccurrence visitOccurrence : VisitOccurrences) {
-				Long fhirId = IdMapping.getFHIRfromOMOP(visitOccurrence.getId(), EncounterResourceProvider.getType());
+				String fhirId = IdMapping.getFHIRfromOMOP(visitOccurrence.getId(), EncounterResourceProvider.getType());
 				Encounter enc = OmopEncounter.getInstance().constructFHIR(fhirId, visitOccurrence);
 				if (enc != null)
 					listResources.add(enc);
@@ -575,7 +538,7 @@ public class OmopPatient extends BaseOmopResource<USCorePatient, FPerson, FPerso
 			return null;
 
 		// See if this exists.
-		Long fhirId = generalPractitioner.getReferenceElement().getIdPartAsLong();
+		String fhirId = generalPractitioner.getReferenceElement().getIdPart();
 		Long omopId = IdMapping.getOMOPfromFHIR(fhirId, PractitionerResourceProvider.getType());
 		Provider provider = providerService.findById(omopId);
 		if (provider != null) {

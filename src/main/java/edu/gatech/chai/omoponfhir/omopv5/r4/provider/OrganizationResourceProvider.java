@@ -108,7 +108,7 @@ public class OrganizationResourceProvider implements IResourceProvider {
 	public MethodOutcome createOrganization(@ResourceParam Organization theOrganization) {
 		// validateResource(thePatient);
 
-		Long id=null;
+		String id = null;
 		try {
 			id = myMapper.toDbase(theOrganization, null);
 		} catch (FHIRException e) {
@@ -212,7 +212,7 @@ public class OrganizationResourceProvider implements IResourceProvider {
 	public MethodOutcome updateOrganization(@IdParam IdType theId, @ResourceParam Organization theOrganization) {
 		validateResource(theOrganization);
 
-		Long fhirId=null;
+		String fhirId = null;
 		try {
 			fhirId = myMapper.toDbase(theOrganization, theId);
 		} catch (FHIRException e) {

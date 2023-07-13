@@ -127,7 +127,7 @@ public class DeviceUseStatementResourceProvider implements IResourceProvider {
 			errorProcessing("Device must be contained in the resource in order to create resource");
 		}
 		
-		Long id=null;
+		String id = null;
 		try {
 			id = getMyMapper().toDbase(theDeviceUseStatement, null);
 		} catch (FHIRException e) {
@@ -210,7 +210,7 @@ public class DeviceUseStatementResourceProvider implements IResourceProvider {
 	public MethodOutcome updateDeviceUseStatement(@IdParam IdType theId, @ResourceParam MyDeviceUseStatement theDeviceUseStatement) {
 		validateResource(theDeviceUseStatement);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = getMyMapper().toDbase(theDeviceUseStatement, theId);
 		} catch (FHIRException e) {

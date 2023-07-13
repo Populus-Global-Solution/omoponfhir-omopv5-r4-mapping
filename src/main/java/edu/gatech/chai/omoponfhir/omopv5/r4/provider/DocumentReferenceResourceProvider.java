@@ -105,7 +105,7 @@ public class DocumentReferenceResourceProvider implements IResourceProvider {
 	public MethodOutcome createDocumentReference(@ResourceParam DocumentReference theDocumentReference) {
 		validateResource(theDocumentReference);
 
-		Long id = null;
+		String id = null;
 		try {
 			id = getMyMapper().toDbase(theDocumentReference, null);
 		} catch (FHIRException e) {
@@ -137,7 +137,7 @@ public class DocumentReferenceResourceProvider implements IResourceProvider {
 	public MethodOutcome updateDocumentReference(@IdParam IdType theId, @ResourceParam DocumentReference theDocumentReference) {
 		validateResource(theDocumentReference);
 
-		Long fhirId = null;
+		String fhirId = null;
 		try {
 			fhirId = getMyMapper().toDbase(theDocumentReference, theId);
 		} catch (FHIRException e) {

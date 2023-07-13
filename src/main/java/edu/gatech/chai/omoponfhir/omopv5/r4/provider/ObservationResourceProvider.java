@@ -106,7 +106,7 @@ public class ObservationResourceProvider implements IResourceProvider {
 	public MethodOutcome createObservation(@ResourceParam Observation theObservation) {
 		validateResource(theObservation);
 		
-		Long id = null;
+		String id = null;
 		try {
 			id = getMyMapper().toDbase(theObservation, null);
 		} catch (FHIRException e) {
@@ -260,7 +260,7 @@ public class ObservationResourceProvider implements IResourceProvider {
 	 * 
 	 * @param theId
 	 *            This is the ID of the patient to update
-	 * @param thePatient
+	 * @param theObservation
 	 *            This is the actual resource to save
 	 * @return This method returns a "MethodOutcome"
 	 */
@@ -268,7 +268,7 @@ public class ObservationResourceProvider implements IResourceProvider {
 	public MethodOutcome updateObservation(@IdParam IdType theId, @ResourceParam Observation theObservation) {
 		validateResource(theObservation);
 		
-		Long fhirId=null;
+		String fhirId=null;
 		try {
 			fhirId = getMyMapper().toDbase(theObservation, theId);
 		} catch (FHIRException e) {

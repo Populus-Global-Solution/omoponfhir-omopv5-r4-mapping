@@ -99,7 +99,7 @@ public class ImmunizationResourceProvider implements IResourceProvider {
 	public MethodOutcome createImmunization(@ResourceParam Immunization theImmunization) {
 		validateResource(theImmunization);
 		
-		Long id=null;
+		String id=null;
 		try {
 			id = myMapper.toDbase(theImmunization, null);
 		} catch (FHIRException e) {
@@ -129,7 +129,7 @@ public class ImmunizationResourceProvider implements IResourceProvider {
 	public MethodOutcome updateUmmunization(@IdParam IdType theId, @ResourceParam Immunization theImmunization) {
 		validateResource(theImmunization);
 		
-		Long fhirId=null;
+		String fhirId = null;
 		try {
 			fhirId = myMapper.toDbase(theImmunization, theId);
 		} catch (FHIRException e) {

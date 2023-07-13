@@ -69,7 +69,7 @@ public class OmopDevice extends BaseOmopResource<Device, DeviceExposure, DeviceE
 	}
 	
 	@Override
-	public MyDevice constructFHIR(Long fhirId, DeviceExposure entity) {
+	public MyDevice constructFHIR(String fhirId, DeviceExposure entity) {
 		MyDevice device = new MyDevice();
 		device.setId(new IdType(fhirId));
 		
@@ -162,7 +162,7 @@ public class OmopDevice extends BaseOmopResource<Device, DeviceExposure, DeviceE
 	}
 
 	@Override
-	public Long toDbase(Device fhirResource, IdType fhirId) throws FHIRException {
+	public String toDbase(Device fhirResource, IdType fhirId) throws FHIRException {
 		return null;
 	}
 

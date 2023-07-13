@@ -100,7 +100,7 @@ public class PractitionerResourceProvider implements IResourceProvider {
 	public MethodOutcome createPractitioner(@ResourceParam Practitioner thePractitioner) {
 		validateResource(thePractitioner);
 
-		Long id = null;
+		String id = null;
 		try {
 			id = getMyMapper().toDbase(thePractitioner, null);
 		} catch (FHIRException e) {
@@ -229,7 +229,7 @@ public class PractitionerResourceProvider implements IResourceProvider {
 	public MethodOutcome updatePractitioner(@IdParam IdType theId, @ResourceParam Practitioner thePractitioner) {
 		validateResource(thePractitioner);
 
-		Long fhirId=null;
+		String fhirId = null;
 		try {
 			fhirId = myMapper.toDbase(thePractitioner, theId);
 		} catch (FHIRException e) {

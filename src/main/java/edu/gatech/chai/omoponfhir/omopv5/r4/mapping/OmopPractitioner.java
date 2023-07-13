@@ -80,7 +80,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 //	@Override
 //	public Practitioner toFHIR(IdType id) {
 //		String practitioncerResourceName = ResourceType.Practitioner.getPath();
-//		Long id_long_part = id.getIdPartAsLong();
+//		Long id_long_part = id.getIdPart();
 //		Long omopId = IdMapping.getOMOPfromFHIR(id_long_part, practitioncerResourceName);
 //		
 //		Provider omopProvider = getMyOmopService().findById(omopId);
@@ -98,7 +98,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 //	}
 	
 	@Override
-	public Practitioner constructFHIR(Long fhirId, Provider omopProvider) {
+	public Practitioner constructFHIR(String fhirId, Provider omopProvider) {
 		Practitioner practitioner = new Practitioner(); //Assuming default active state
 		practitioner.setId(new IdType(fhirId));
 		
@@ -156,7 +156,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 	}
 
 	@Override
-	public Long toDbase(Practitioner practitioner, IdType fhirId) throws FHIRException {
+	public String toDbase(Practitioner practitioner, IdType fhirId) throws FHIRException {
 		
 		// If we have match in identifier, then we can update or create since
 		// we have the patient. If we have no match, but fhirId is not null,
@@ -164,7 +164,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 		Long omopId = null;
 		if (fhirId != null) {
 			// Search for this ID.
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPartAsLong(), PractitionerResourceProvider.getType());
+			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), PractitionerResourceProvider.getType());
 		}
 
 		List<Identifier> identifiers = practitioner.getIdentifier();
@@ -194,6 +194,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 		} else {
 			omopRecordId = getMyOmopService().create(omopProvider).getId();
 		}
+
 		return IdMapping.getFHIRfromOMOP(omopRecordId, PractitionerResourceProvider.getType());
 	}
 	
