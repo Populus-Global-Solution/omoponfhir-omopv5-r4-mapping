@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import edu.gatech.chai.omoponfhir.omopv5.r4.mapping.IdMapping;
+import edu.gatech.chai.omoponfhir.omopv5.r4.mapping.IdMappingService;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.DateType;
 import org.hl7.fhir.r4.model.IdType;
@@ -78,9 +78,12 @@ public class PatientResourceProvider implements IResourceProvider {
 	private OmopPatient myMapper;
 	private int preferredPageSize = 30;
 
+	private IdMappingService idMappingService;
+
 	public PatientResourceProvider() {
 		myAppCtx = ContextLoaderListener.getCurrentWebApplicationContext();
 		myDbType = myAppCtx.getServletContext().getInitParameter("backendDbType");
+		idMappingService = myAppCtx.getBean(IdMappingService.class);
 		if (myDbType.equalsIgnoreCase("omopv5") == true) {
 			myMapper = new OmopPatient(myAppCtx);
 		} else {
@@ -393,7 +396,7 @@ public class PatientResourceProvider implements IResourceProvider {
 		List<IBaseResource> resources = new ArrayList<IBaseResource>();
 		resources.add(getMyMapper().toFHIR(thePatientId));
 
-		Long omopPatientId = IdMapping.getOMOPfromFHIR(thePatientId.getId(), thePatientId.getResourceType());
+		Long omopPatientId = idMappingService.getOMOPfromFHIR(thePatientId.getId(), thePatientId.getResourceType());
 		getMyMapper().getEverthingfor(resources, omopPatientId, startDate, endDate);
 		
 		final List<IBaseResource> retv = resources;

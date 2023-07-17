@@ -49,6 +49,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 	private static OmopOrganization omopOrganization = new OmopOrganization();
 	private LocationService locationService;
 	private VocabularyService vocabularyService;
+	private IdMappingService idMappingService;
 
 	public OmopOrganization(WebApplicationContext context) {
 		super(context, CareSite.class, CareSiteService.class, OrganizationResourceProvider.getType());
@@ -67,7 +68,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 		// Get bean for other service(s) for mapping.
 		locationService = context.getBean(LocationService.class);
 		vocabularyService = context.getBean(VocabularyService.class);
-
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 	
 	public static OmopOrganization getInstance() {
@@ -114,7 +115,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 
 		Long omopId = null;
 		if (fhirId != null) {
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), OrganizationResourceProvider.getType());
+			omopId = idMappingService.getOMOPfromFHIR(fhirId.getIdPart(), OrganizationResourceProvider.getType());
 		} else {
 			// Get the identifier to store the source information.
 			// If we found a matching one, replace this with the careSite.
@@ -145,7 +146,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 			omopRecordId = getMyOmopService().create(careSite).getId();
 		}
 		
-		return IdMapping.getFHIRfromOMOP(omopRecordId, OrganizationResourceProvider.getType());
+		return idMappingService.getFHIRfromOMOP(omopRecordId, OrganizationResourceProvider.getType());
 	}
 
 //	@Override
@@ -168,7 +169,7 @@ public class OmopOrganization extends BaseOmopResource<Organization, CareSite, C
 				if (partOfOrganization != null && partOfOrganization.isEmpty() == false) {
 					IIdType partOfOrgId = partOfOrganization.getReferenceElement();
 					String partOfOrgFhirId = partOfOrgId.getIdPart();
-					Long omopId = IdMapping.getOMOPfromFHIR(partOfOrgFhirId, OrganizationResourceProvider.getType());
+					Long omopId = idMappingService.getOMOPfromFHIR(partOfOrgFhirId, OrganizationResourceProvider.getType());
 					CareSite partOfCareSite = getMyOmopService().findById(omopId);
 					Organization partOfOrgResource = constructFHIR(partOfOrgFhirId, partOfCareSite);
 					

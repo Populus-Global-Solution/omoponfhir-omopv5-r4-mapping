@@ -76,6 +76,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 	private FPersonService fPersonService;
 	private ProviderService providerService;
 	private VisitOccurrenceService visitOccurrenceService;
+	private IdMappingService idMappingService;
 
 	public OmopDocumentReference() {
 		super(ContextLoaderListener.getCurrentWebApplicationContext(), Note.class, NoteService.class,
@@ -96,6 +97,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 		fPersonService = context.getBean(FPersonService.class);
 		providerService = context.getBean(ProviderService.class);
 		visitOccurrenceService = context.getBean(VisitOccurrenceService.class);
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 
 	public static OmopDocumentReference getInstance() {
@@ -107,7 +109,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 		Long omopId = null;
 		if (fhirId != null) {
 			// Update
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), DocumentReferenceResourceProvider.getType());
+			omopId = idMappingService.getOMOPfromFHIR(fhirId.getIdPart(), DocumentReferenceResourceProvider.getType());
 		}
 		
 		Note note = constructOmop(omopId, fhirResource);
@@ -119,7 +121,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 			OmopRecordId = getMyOmopService().update(note).getId();
 		}
 		
-		return IdMapping.getFHIRfromOMOP(OmopRecordId, DocumentReferenceResourceProvider.getType());
+		return idMappingService.getFHIRfromOMOP(OmopRecordId, DocumentReferenceResourceProvider.getType());
 	}
 
 	@Override
@@ -141,7 +143,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 			break;
 		case DocumentReference.SP_ENCOUNTER:
 			String fhirId = ((ReferenceParam) value).getIdPart();
-			Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(fhirId, DocumentReferenceResourceProvider.getType());
+			Long omopVisitOccurrenceId = idMappingService.getOMOPfromFHIR(fhirId, DocumentReferenceResourceProvider.getType());
 			
 			if (omopVisitOccurrenceId != null) {
 				paramWrapper.setParameterType("Long");
@@ -286,7 +288,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 		if (subject.getReferenceElement().getResourceType().equals(PatientResourceProvider.getType())) {
 			// get patient ID.
 			String patientId = subject.getReferenceElement().getIdPart();
-			Long omopPersonId = IdMapping.getOMOPfromFHIR(patientId, PatientResourceProvider.getType());
+			Long omopPersonId = idMappingService.getOMOPfromFHIR(patientId, PatientResourceProvider.getType());
 			FPerson fPerson = fPersonService.findById(omopPersonId);
 			if (fPerson == null) {
 				ThrowFHIRExceptions.unprocessableEntityException("Patient does not exist");
@@ -312,7 +314,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 		if (authorReference != null && !authorReference.isEmpty()) {
 			if (authorReference.getReferenceElement().getResourceType().equals(PractitionerResourceProvider.getType())) {
 				String practitionerId = authorReference.getReferenceElement().getIdPart();
-				Long omopProviderId = IdMapping.getOMOPfromFHIR(practitionerId, PractitionerResourceProvider.getType());
+				Long omopProviderId = idMappingService.getOMOPfromFHIR(practitionerId, PractitionerResourceProvider.getType());
 				Provider provider = providerService.findById(omopProviderId);
 				if (provider != null) {
 					note.setProvider(provider);
@@ -331,7 +333,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 //			TODO in the future, we want to deal with all of these encounters isntead of just the first
 			if (encounterReference != null && !encounterReference.isEmpty()) {
 				String encounterId = encounterReference.getReferenceElement().getIdPart();
-				Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(encounterId, EncounterResourceProvider.getType());
+				Long omopVisitOccurrenceId = idMappingService.getOMOPfromFHIR(encounterId, EncounterResourceProvider.getType());
 				VisitOccurrence visitOccurrence = visitOccurrenceService.findById(omopVisitOccurrenceId);
 				if (visitOccurrence != null) {
 					note.setVisitOccurrence(visitOccurrence);
@@ -460,7 +462,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 		
 		// Set Subject
 		FPerson fPerson = entity.getFPerson();
-		Reference patientReference = new Reference(new IdType(PatientResourceProvider.getType(), IdMapping.getFHIRfromOMOP(fPerson.getId(), PatientResourceProvider.getType())));
+		Reference patientReference = new Reference(new IdType(PatientResourceProvider.getType(), idMappingService.getFHIRfromOMOP(fPerson.getId(), PatientResourceProvider.getType())));
 		patientReference.setDisplay(fPerson.getNameAsSingleString());
 		documentReference.setSubject(patientReference);
 		
@@ -485,7 +487,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 		// Set author 
 		Provider provider = entity.getProvider();
 		if (provider != null) {
-			Reference practitionerReference = new Reference (new IdType(PractitionerResourceProvider.getType(), IdMapping.getFHIRfromOMOP(provider.getId(), PractitionerResourceProvider.getType())));
+			Reference practitionerReference = new Reference (new IdType(PractitionerResourceProvider.getType(), idMappingService.getFHIRfromOMOP(provider.getId(), PractitionerResourceProvider.getType())));
 			practitionerReference.setDisplay(provider.getProviderName());
 			documentReference.addAuthor(practitionerReference);
 		}
@@ -507,7 +509,7 @@ public class OmopDocumentReference extends BaseOmopResource<DocumentReference, N
 		// Set context if visitOccurrence exists.
 		VisitOccurrence visitOccurrence = entity.getVisitOccurrence();
 		if (visitOccurrence != null) {
-			Reference encounterReference = new Reference(new IdType(EncounterResourceProvider.getType(), IdMapping.getFHIRfromOMOP(visitOccurrence.getId(), EncounterResourceProvider.getType())));
+			Reference encounterReference = new Reference(new IdType(EncounterResourceProvider.getType(), idMappingService.getFHIRfromOMOP(visitOccurrence.getId(), EncounterResourceProvider.getType())));
 			DocumentReferenceContextComponent documentReferenceContextComponent = new DocumentReferenceContextComponent();
 			documentReferenceContextComponent.addEncounter(encounterReference);
 			documentReferenceContextComponent.setSourcePatientInfo(patientReference);

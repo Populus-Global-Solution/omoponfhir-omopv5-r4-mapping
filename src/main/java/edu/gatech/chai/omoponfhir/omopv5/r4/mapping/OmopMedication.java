@@ -39,6 +39,7 @@ import edu.gatech.chai.omopv5.model.entity.Concept;
 public class OmopMedication extends BaseOmopResource<Medication, Concept, ConceptService> {
 
 	private static OmopMedication omopMedication = new OmopMedication();
+	private IdMappingService idMappingService;
 	
 	public OmopMedication(WebApplicationContext context) {
 		super(context, Concept.class, ConceptService.class, MedicationResourceProvider.getType());
@@ -56,9 +57,9 @@ public class OmopMedication extends BaseOmopResource<Medication, Concept, Concep
 	}
 	
 	private void initialize(WebApplicationContext context) {
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 
-	
 	public static OmopMedication getInstance() {
 		return omopMedication;
 	}
@@ -208,7 +209,7 @@ public class OmopMedication extends BaseOmopResource<Medication, Concept, Concep
 
 		for (Concept entity : entities) {
 			Long omopId = entity.getIdAsLong();
-			String fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
+			String fhirId = idMappingService.getFHIRfromOMOP(omopId, getMyFhirResourceType());
 			Medication fhirResource = constructResource(fhirId, entity, includes);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);			

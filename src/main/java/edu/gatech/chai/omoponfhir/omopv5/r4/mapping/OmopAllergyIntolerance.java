@@ -62,6 +62,7 @@ public class OmopAllergyIntolerance extends BaseOmopResource<AllergyIntolerance,
 	private ProviderService providerService;
 	private ConceptService conceptService;
 	private VisitOccurrenceService visitOccurrenceService;
+	private IdMappingService idMappingService;
 
 	public OmopAllergyIntolerance(WebApplicationContext context) {
 		super(context, Observation.class, ObservationService.class,
@@ -84,6 +85,7 @@ public class OmopAllergyIntolerance extends BaseOmopResource<AllergyIntolerance,
 			providerService = context.getBean(ProviderService.class);
 			conceptService = context.getBean(ConceptService.class);
 			visitOccurrenceService = context.getBean(VisitOccurrenceService.class);
+			idMappingService = context.getBean(IdMappingService.class);
 		} else {
 			logger.error("context must be NOT null");
 		}
@@ -232,7 +234,7 @@ public class OmopAllergyIntolerance extends BaseOmopResource<AllergyIntolerance,
 
 		for (Observation entity : entities) {
 			Long omopId = entity.getIdAsLong();
-			String fhirId = IdMapping.getFHIRfromOMOP(omopId, ResourceType.AllergyIntolerance.name());
+			String fhirId = idMappingService.getFHIRfromOMOP(omopId, ResourceType.AllergyIntolerance.name());
 			AllergyIntolerance fhirResource = constructResource(fhirId, entity, includes);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);
@@ -346,7 +348,7 @@ public class OmopAllergyIntolerance extends BaseOmopResource<AllergyIntolerance,
 		// set the person
 		if (fhirResource.getPatient() != null) {
 			String subjectFhirId = fhirResource.getPatient().getReferenceElement().getIdPart();
-			Long omopSubjectId = IdMapping.getOMOPfromFHIR(subjectFhirId, fhirResource.getPatient().getReferenceElement().getResourceType());
+			Long omopSubjectId = idMappingService.getOMOPfromFHIR(subjectFhirId, fhirResource.getPatient().getReferenceElement().getResourceType());
 			fPerson = fPersonService.findById(omopSubjectId);
 			if (fPerson == null) {
 				try {
@@ -373,7 +375,7 @@ public class OmopAllergyIntolerance extends BaseOmopResource<AllergyIntolerance,
 		// set the provider
 		if (fhirResource.getRecorder() != null && !fhirResource.getRecorder().isEmpty()) {
 			String fhirProviderId = fhirResource.getRecorder().getReferenceElement().getIdPart();
-			Long omopProviderId = IdMapping.getOMOPfromFHIR(fhirProviderId, fhirResource.getRecorder().getReferenceElement().getResourceType());
+			Long omopProviderId = idMappingService.getOMOPfromFHIR(fhirProviderId, fhirResource.getRecorder().getReferenceElement().getResourceType());
 			provider = providerService.findById(omopProviderId);
 			if (provider != null) {
 				observation.setProvider(provider);

@@ -15,8 +15,14 @@
  *******************************************************************************/
 package edu.gatech.chai.omoponfhir.omopv5.r4.mapping;
 
+import edu.gatech.chai.omopv5.dba.service.IdPairService;
+import edu.gatech.chai.omopv5.model.entity.IdPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 /**
  * ID Mapping Class to manage the IDs between FHIR and OMOP.
@@ -24,16 +30,17 @@ import org.slf4j.LoggerFactory;
  * @author mc142
  *
  */
-public class IdMapping {
-	static final Logger logger = LoggerFactory.getLogger(IdMapping.class);
+@Service
+public class IdMappingService {
+	static final Logger logger = LoggerFactory.getLogger(IdMappingService.class);
 
-	public static String getFHIRfromOMOP(Long omopId, String resourceName) {
-		// We use the same ID for now.
-		// TODO: Develop the ID mapping so that we do not reveal native
-		//       OMOP ID. If the mapping exists, send it. If not, create a new
-		//       mapping.
-		
-		return omopId.toString();
+	@Autowired
+	private IdPairService idPairService;
+
+	public String getFHIRfromOMOP(Long omopId, String resourceName) {
+		return idPairService.findByOmopId(omopId)
+				.map(IdPair::getFhirId)
+				.orElse(null);
 	}
 
 	/**
@@ -41,21 +48,18 @@ public class IdMapping {
 	 * @param fhirId
 	 * @return
 	 */
-	public static Long getOMOPfromFHIR(String fhirId, String resourceName) {
-		// We use the same ID now.
-		// TODO: Develop the ID mapping so that we do not reveal native
-		//       OMOP ID.
-		
-		return Long.valueOf(fhirId);
+	public Long getOMOPfromFHIR(String fhirId, String resourceName) {
+		Optional<IdPair> mapping = idPairService.findByFhirId(fhirId);
+
+		if (mapping.isEmpty()) {
+			return writeMapping(fhirId, resourceName).getOmopId();
+		}
+
+		return mapping.get().getOmopId();
 	}
 
-	public static void writeMapping(String fhirId, String resourceName, Long omopId) {
-		logger.info("Creating mapping for a {} with FHIR id {} and OMOP id {}", resourceName, fhirId, omopId);
-	}
-	
-	public static void writeOMOPfromFHIR(String fhirId) {
-		// Placeholder for later to use to store OMOP ID mapping info.
-		// This information will be used by getFHIRfromOMOP
-		// TODO: Develop mapping creation here.
+	private IdPair writeMapping(String fhirId, String resourceName) {
+		logger.info("Creating mapping for a {} with FHIR id {}", resourceName, fhirId);
+		return idPairService.create(new IdPair(fhirId));
 	}
 }

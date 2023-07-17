@@ -35,7 +35,6 @@ import org.hl7.fhir.r4.model.Type;
 import org.hl7.fhir.r4.model.Specimen.SpecimenCollectionComponent;
 import org.hl7.fhir.r4.model.Specimen.SpecimenStatus;
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.ContextLoaderListener;
@@ -48,7 +47,6 @@ import ca.uhn.fhir.rest.param.ParamPrefixEnum;
 import ca.uhn.fhir.rest.param.TokenParam;
 import edu.gatech.chai.omoponfhir.omopv5.r4.utilities.CodeableConceptUtil;
 import edu.gatech.chai.omoponfhir.omopv5.r4.utilities.DateUtil;
-import edu.gatech.chai.omoponfhir.omopv5.r4.utilities.ExtensionUtil;
 import edu.gatech.chai.omoponfhir.omopv5.r4.provider.PatientResourceProvider;
 import edu.gatech.chai.omoponfhir.omopv5.r4.provider.SpecimenResourceProvider;
 import edu.gatech.chai.omopv5.dba.service.ConceptService;
@@ -63,6 +61,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 	private static OmopSpecimen omopSpecimen = new OmopSpecimen();
 
 	private ConceptService conceptService;
+	private IdMappingService idMappingService;
 
 	public OmopSpecimen(WebApplicationContext context) {
 		super(context, edu.gatech.chai.omopv5.model.entity.Specimen.class, SpecimenService.class, SpecimenResourceProvider.getType());
@@ -81,6 +80,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 	private void initialize(WebApplicationContext context) {
 		// Get bean for other services that we need for mapping.
 		conceptService = context.getBean(ConceptService.class);
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 
 	public static OmopSpecimen getInstance() {
@@ -313,7 +313,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 
 		// FHIR Specimen.subject --> OMOP Specimen.person_id
 		String fhirSubjectId = fhirResource.getSubject().getReferenceElement().getIdPart();
-		Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
+		Long omopPersonId = idMappingService.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
 
 		FPerson tPerson = new FPerson();
 		tPerson.setId(omopPersonId);
@@ -395,7 +395,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 		}
 
 		String fhirSubjectId = subjectReference.getReferenceElement().getIdPart();
-		Long omopPersonId = IdMapping.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
+		Long omopPersonId = idMappingService.getOMOPfromFHIR(fhirSubjectId, PatientResourceProvider.getType());
 		if (omopPersonId == null) {
 			throw new FHIRException("We couldn't find the patient in the Subject");
 		}
@@ -411,7 +411,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 
 		if (fhirId != null) {
 			fhirIdString = fhirId.getIdPart();
-			omopId = IdMapping.getOMOPfromFHIR(fhirIdString, SpecimenResourceProvider.getType());
+			omopId = idMappingService.getOMOPfromFHIR(fhirIdString, SpecimenResourceProvider.getType());
 		} else {
 			String patientFhirId = fhirResource.getSubject().getReferenceElement().getIdPart();
 
@@ -464,7 +464,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 			omopRecordId = getMyOmopService().create(omopSecimen).getId();
 		}
 
-		return IdMapping.getFHIRfromOMOP(omopRecordId, SpecimenResourceProvider.getType());
+		return idMappingService.getFHIRfromOMOP(omopRecordId, SpecimenResourceProvider.getType());
 	}
 
 	private static Date createDateTime(edu.gatech.chai.omopv5.model.entity.Specimen specimen_) {

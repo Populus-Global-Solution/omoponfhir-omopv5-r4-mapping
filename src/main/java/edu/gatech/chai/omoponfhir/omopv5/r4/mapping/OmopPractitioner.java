@@ -51,7 +51,8 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 	private static OmopPractitioner omopPractitioner = new OmopPractitioner();
 	
 	private CareSiteService careSiteService;
-	private LocationService locationService;	
+	private LocationService locationService;
+	private IdMappingService idMappingService;
 	
 	public OmopPractitioner(WebApplicationContext context) {
 		super(context, Provider.class, ProviderService.class, PractitionerResourceProvider.getType());
@@ -67,10 +68,9 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 	}
 	
 	private void initialize(WebApplicationContext context) {
-		
 		careSiteService = context.getBean(CareSiteService.class);
 		locationService = context.getBean(LocationService.class);
-
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 	
 	public static OmopPractitioner getInstance() {
@@ -164,7 +164,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 		Long omopId = null;
 		if (fhirId != null) {
 			// Search for this ID.
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), PractitionerResourceProvider.getType());
+			omopId = idMappingService.getOMOPfromFHIR(fhirId.getIdPart(), PractitionerResourceProvider.getType());
 		}
 
 		List<Identifier> identifiers = practitioner.getIdentifier();
@@ -195,7 +195,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 			omopRecordId = getMyOmopService().create(omopProvider).getId();
 		}
 
-		return IdMapping.getFHIRfromOMOP(omopRecordId, PractitionerResourceProvider.getType());
+		return idMappingService.getFHIRfromOMOP(omopRecordId, PractitionerResourceProvider.getType());
 	}
 	
 //	@Override

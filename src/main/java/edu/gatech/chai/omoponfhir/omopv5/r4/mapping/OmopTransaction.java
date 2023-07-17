@@ -33,7 +33,6 @@ import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.MedicationStatement;
 import org.hl7.fhir.r4.model.Observation;
-import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -63,6 +62,7 @@ public class OmopTransaction {
 	private MeasurementService measurementService;
 	private NoteService noteService;
 	private WebApplicationContext myContext;
+	private IdMappingService idMappingService;
 
 	public OmopTransaction(WebApplicationContext context) {
 		this.myContext = context;
@@ -80,6 +80,7 @@ public class OmopTransaction {
 		observationService = context.getBean(ObservationService.class);
 		measurementService = context.getBean(MeasurementService.class);
 		noteService = context.getBean(NoteService.class);
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 
 	public static OmopTransaction getInstance() {
@@ -123,7 +124,7 @@ public class OmopTransaction {
 				// giving up again...
 				return null;
 			}
-			Long omopId = IdMapping.getOMOPfromFHIR(fhirId, referenceIdType.getResourceType());
+			Long omopId = idMappingService.getOMOPfromFHIR(fhirId, referenceIdType.getResourceType());
 			if (omopId == null || omopId == 0L) {
 				// giving up... :(
 				return null;
@@ -362,7 +363,7 @@ public class OmopTransaction {
 						// Constructing FHIR to respond.
 						System.out.println("Created FPerson ID: " + entity.getIdAsLong());
 						fhirResource = OmopPatient.getInstance().constructFHIR(
-								IdMapping.getFHIRfromOMOP(entity.getIdAsLong(), PatientResourceProvider.getType()),
+								idMappingService.getFHIRfromOMOP(entity.getIdAsLong(), PatientResourceProvider.getType()),
 								(FPerson) entity);
 						bundleEntryComponent.setResource(fhirResource);
 						// It was success full, so we return 201 Created.

@@ -18,7 +18,6 @@ package edu.gatech.chai.omoponfhir.omopv5.r4.mapping;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.gatech.chai.omopv5.model.entity.Observation;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.IdType;
@@ -54,6 +53,8 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 	protected FhirOmopCodeMapImpl fhirOmopCodeMap;
 	protected TwoLetterStateMapImpl twoLetterStateMap;
 	
+	private IdMappingService idMappingService;
+	
 	private S myOmopService;
 	private Class<O> myEntityClass;
 	private Class<S> myServiceClass;
@@ -65,6 +66,7 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 	public BaseOmopResource(WebApplicationContext context, Class<O> entityClass, Class<S> serviceClass,
 			String fhirResourceType) {
 		myOmopService = context.getBean(serviceClass);
+		idMappingService = context.getBean(IdMappingService.class);
 		
 		myEntityClass = entityClass;
 		myFhirResourceType = fhirResourceType;
@@ -98,7 +100,7 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 		Long omopId = null;
 
 		if (fhirId != null) {
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), fhirResource.getResourceType().name());
+			omopId = idMappingService.getOMOPfromFHIR(fhirId.getIdPart(), fhirResource.getResourceType().name());
 
 			// if (omopId == null) {
 			// 	logger.error("Failed to get AllergyIntolerance.id as Long Value");
@@ -112,16 +114,14 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 			omopId = getMyOmopService().update(observation).getIdAsLong();
 		} else {
 			omopId = getMyOmopService().create(observation).getIdAsLong();
-
-			IdMapping.writeMapping(fhirId.getIdPart(), fhirResource.getResourceType().name(), omopId);
 		}
 
-		return IdMapping.getFHIRfromOMOP(omopId, fhirResource.getResourceType().name());
+		return idMappingService.getFHIRfromOMOP(omopId, fhirResource.getResourceType().name());
 	}
 
 	public Long removeByFhirId(IdType fhirId) {
 		String idPart = fhirId.getIdPart();
-		Long myId = IdMapping.getOMOPfromFHIR(idPart, getMyFhirResourceType());
+		Long myId = idMappingService.getOMOPfromFHIR(idPart, getMyFhirResourceType());
 
 		return myOmopService.removeById(myId);
 	}
@@ -184,13 +184,13 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 	 */
 	public F toFHIR(IdType id) {
 		String id_part = id.getIdPart();
-		Long myId = IdMapping.getOMOPfromFHIR(id_part, getMyFhirResourceType());
+		Long myId = idMappingService.getOMOPfromFHIR(id_part, getMyFhirResourceType());
 
 		O entityClass = getMyOmopService().findById(myId);
 		if (entityClass == null)
 			return null;
 
-		String fhirId = IdMapping.getFHIRfromOMOP(myId, getMyFhirResourceType());
+		String fhirId = idMappingService.getFHIRfromOMOP(myId, getMyFhirResourceType());
 
 		return constructFHIR(fhirId, entityClass);
 	}
@@ -204,7 +204,7 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 		// FHIR Patient resources to be included in the bundle.
 		for (O entity : entities) {
 			Long omopId = entity.getIdAsLong();
-			String fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
+			String fhirId = idMappingService.getFHIRfromOMOP(omopId, getMyFhirResourceType());
 			F fhirResource = constructResource(fhirId, entity, includes);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);
@@ -219,7 +219,7 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 
 		for (O entity : entities) {
 			Long omopId = entity.getIdAsLong();
-			String fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
+			String fhirId = idMappingService.getFHIRfromOMOP(omopId, getMyFhirResourceType());
 			F fhirResource = constructResource(fhirId, entity, includes);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);
@@ -234,7 +234,7 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 
 		for (O entity : entities) {
 			Long omopId = entity.getIdAsLong();
-			String fhirId = IdMapping.getFHIRfromOMOP(omopId, getMyFhirResourceType());
+			String fhirId = idMappingService.getFHIRfromOMOP(omopId, getMyFhirResourceType());
 			F fhirResource = constructResource(fhirId, entity, null);
 			if (fhirResource != null) {
 				listResources.add(fhirResource);
@@ -406,7 +406,7 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 			if (contextReference.getReferenceElement().getResourceType().equals(EncounterResourceProvider.getType())) {
 				// Encounter context.
 				String fhirEncounterId = contextReference.getReferenceElement().getIdPart();
-				Long omopVisitOccurrenceId = IdMapping.getOMOPfromFHIR(fhirEncounterId,
+				Long omopVisitOccurrenceId = idMappingService.getOMOPfromFHIR(fhirEncounterId,
 						EncounterResourceProvider.getType());
 				if (omopVisitOccurrenceId != null) {
 					visitOccurrence = visitOccurrenceService.findById(omopVisitOccurrenceId);

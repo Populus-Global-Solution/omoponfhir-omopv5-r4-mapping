@@ -47,6 +47,7 @@ public class OmopServerOperations {
 	private FPersonService fPersonService;
 	private ObservationService observationService;
 	private MeasurementService measurementService;
+	private IdMappingService idMappingService;
 
 	public OmopServerOperations(WebApplicationContext context) {
 		initialize(context);
@@ -60,6 +61,7 @@ public class OmopServerOperations {
 		fPersonService = context.getBean(FPersonService.class);
 		observationService = context.getBean(ObservationService.class);
 		measurementService = context.getBean(MeasurementService.class);
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 
 	public static OmopTransaction getInstance() {
@@ -91,7 +93,7 @@ public class OmopServerOperations {
 				// giving up again...
 				return null;
 			}
-			Long omopId = IdMapping.getOMOPfromFHIR(fhirId, referenceIdType.getResourceType());
+			Long omopId = idMappingService.getOMOPfromFHIR(fhirId, referenceIdType.getResourceType());
 			if (omopId == null || omopId == 0L) {
 				// giving up... :(
 				return null;

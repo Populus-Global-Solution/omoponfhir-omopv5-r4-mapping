@@ -68,6 +68,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 	private ConceptService conceptService;
 	private ProviderService providerService;
 	private FPersonService fPersonService;
+	private IdMappingService idMappingService;
 
 	private final static Long SELF_REPORTED_CONCEPTID = 44787730L;
 	private final static Long PHYSICIAN_ADMINISTERED_PROCEDURE = 38000179L;
@@ -116,6 +117,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 			conceptService = context.getBean(ConceptService.class);
 			providerService = context.getBean(ProviderService.class);
 			fPersonService = context.getBean(FPersonService.class);
+			idMappingService = context.getBean(IdMappingService.class);
 		}
 	}
 
@@ -478,7 +480,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 		if (patientReference == null)
 			throw new FHIRException("Patient must exist.");
 
-		Long omopFPersonId = IdMapping.getOMOPfromFHIR(patientReference.getReferenceElement().getIdPart(), patientReference.getType());
+		Long omopFPersonId = idMappingService.getOMOPfromFHIR(patientReference.getReferenceElement().getIdPart(), patientReference.getType());
 
 		FPerson fPerson = fPersonService.findById(omopFPersonId);
 		if (fPerson == null)
@@ -547,7 +549,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 			Reference performerActorReference = performer.getActor();
 			if (!performerActorReference.isEmpty()) {
 				String performerId = performerActorReference.getReferenceElement().getIdPart();
-				Long omopProviderId = IdMapping.getOMOPfromFHIR(performerId, performer.getActor().getType());
+				Long omopProviderId = idMappingService.getOMOPfromFHIR(performerId, performer.getActor().getType());
 
 				Provider provider = providerService.findById(omopProviderId);
 				if (provider == null) {
@@ -562,7 +564,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 		Reference encounterReference = fhirResource.getEncounter();
 		if (!encounterReference.isEmpty()) {
 			String encounterId = encounterReference.getReferenceElement().getIdPart();
-			Long omopEncounterId = IdMapping.getOMOPfromFHIR(encounterId, fhirResource.getEncounter().getType());
+			Long omopEncounterId = idMappingService.getOMOPfromFHIR(encounterId, fhirResource.getEncounter().getType());
 
 			VisitOccurrence visitOccurrence = visitOccurrenceService.findById(omopEncounterId);
 			if (visitOccurrence == null) {

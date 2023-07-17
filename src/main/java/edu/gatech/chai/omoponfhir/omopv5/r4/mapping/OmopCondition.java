@@ -60,6 +60,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 	private ProviderService providerService;
 	private ConceptService conceptService;
 	private VisitOccurrenceService visitOccurrenceService;
+	private IdMappingService idMappingService;
 
 	public OmopCondition(WebApplicationContext context) {
 		super(context, ConditionOccurrence.class, ConditionOccurrenceService.class,
@@ -84,6 +85,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 			providerService = context.getBean(ProviderService.class);
 			conceptService = context.getBean(ConceptService.class);
 			visitOccurrenceService = context.getBean(VisitOccurrenceService.class);
+			idMappingService = context.getBean(IdMappingService.class);
 		} else {
 			logger.error("context must be NOT null");
 		}
@@ -436,7 +438,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 		// get the Subject
 		if (fhirResource.getSubject() != null) {
 			String subjectFhirId = fhirResource.getSubject().getReferenceElement().getIdPart();
-			Long subjectOmopId = IdMapping.getOMOPfromFHIR(subjectFhirId, PatientResourceProvider.getType());
+			Long subjectOmopId = idMappingService.getOMOPfromFHIR(subjectFhirId, PatientResourceProvider.getType());
 			fPerson = fPersonService.findById(subjectOmopId);
 			if (fPerson == null) {
 				try {
@@ -454,7 +456,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 		// get the Provider
 		if (fhirResource.getAsserter() != null && !fhirResource.getAsserter().isEmpty()) {
 			String providerFhirId = fhirResource.getAsserter().getReferenceElement().getIdPart();
-			Long providerOmopId = IdMapping.getOMOPfromFHIR(providerFhirId, fhirResource.getRecorder().getReferenceElement().getResourceType());
+			Long providerOmopId = idMappingService.getOMOPfromFHIR(providerFhirId, fhirResource.getRecorder().getReferenceElement().getResourceType());
 			provider = providerService.findById(providerOmopId);
 			if (provider != null) {
 				conditionOccurrence.setProvider(provider);

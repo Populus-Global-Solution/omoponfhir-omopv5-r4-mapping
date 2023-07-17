@@ -64,6 +64,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 	private CareSiteService careSiteService;
 	private ProviderService providerService;
 	private ConditionOccurrenceService conditionOccurrenceService;
+	private IdMappingService idMappingService;
 
 	public OmopEncounter() {
 		super(ContextLoaderListener.getCurrentWebApplicationContext(), VisitOccurrence.class,
@@ -85,6 +86,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 		careSiteService = context.getBean(CareSiteService.class);
 		providerService = context.getBean(ProviderService.class);
 		conditionOccurrenceService = context.getBean(ConditionOccurrenceService.class);
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 
 	public static OmopEncounter getInstance() {
@@ -192,7 +194,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 		if (visitOccurrence.getCareSite() != null) {
 			Reference serviceProviderReference = new Reference(
 				new IdType(OrganizationResourceProvider.getType(), 
-					IdMapping.getFHIRfromOMOP(visitOccurrence.getCareSite().getId(), OrganizationResourceProvider.getType())));
+					idMappingService.getFHIRfromOMOP(visitOccurrence.getCareSite().getId(), OrganizationResourceProvider.getType())));
 			serviceProviderReference.setDisplay(visitOccurrence.getCareSite().getCareSiteName());
 			encounter.setServiceProvider(serviceProviderReference);
 		}
@@ -200,7 +202,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 		if (visitOccurrence.getProvider() != null) {
 			Reference individualReference = new Reference(
 				new IdType(PractitionerResourceProvider.getType(), 
-					IdMapping.getFHIRfromOMOP(visitOccurrence.getProvider().getId(), PractitionerResourceProvider.getType())));
+					idMappingService.getFHIRfromOMOP(visitOccurrence.getProvider().getId(), PractitionerResourceProvider.getType())));
 			individualReference.setDisplay(visitOccurrence.getProvider().getProviderName());
 			EncounterParticipantComponent participate = new EncounterParticipantComponent();
 			participate.setIndividual(individualReference);
@@ -285,7 +287,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 		// get the Subject
 		if (encounter.getSubject() != null) {
 			String subjectId = encounter.getSubject().getReferenceElement().getIdPart();
-			Long subjectFhirId = IdMapping.getOMOPfromFHIR(subjectId, PatientResourceProvider.getType());
+			Long subjectFhirId = idMappingService.getOMOPfromFHIR(subjectId, PatientResourceProvider.getType());
 			fPerson = fPersonService.findById(subjectFhirId);
 			visitOccurrence.setFPerson(fPerson);
 		} else {
@@ -358,7 +360,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 			 Reference individualRef = participant.getIndividual();
 			if (individualRef != null) {
 				if (individualRef.getReferenceElement().getResourceType().equals(PractitionerResourceProvider.getType())) {
-					Long providerId = IdMapping.getOMOPfromFHIR(individualRef.getReferenceElement().getIdPart(), PractitionerResourceProvider.getType());
+					Long providerId = idMappingService.getOMOPfromFHIR(individualRef.getReferenceElement().getIdPart(), PractitionerResourceProvider.getType());
 					Provider provider = providerService.findById(providerId);
 					if (provider != null) {
 						visitOccurrence.setProvider(provider);
@@ -372,7 +374,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 		if (serviceProvider != null && !serviceProvider.isEmpty()) {
 			// service provider is Organization in Omop on FHIR.
 			if (serviceProvider.getReferenceElement().getResourceType().equals(OrganizationResourceProvider.getType())) {
-				Long careSiteId = IdMapping.getOMOPfromFHIR(serviceProvider.getReferenceElement().getIdPart(), OrganizationResourceProvider.getType());
+				Long careSiteId = idMappingService.getOMOPfromFHIR(serviceProvider.getReferenceElement().getIdPart(), OrganizationResourceProvider.getType());
 				CareSite careSite = careSiteService.findById(careSiteId);
 				if (careSite != null) {
 					visitOccurrence.setCareSite(careSite);

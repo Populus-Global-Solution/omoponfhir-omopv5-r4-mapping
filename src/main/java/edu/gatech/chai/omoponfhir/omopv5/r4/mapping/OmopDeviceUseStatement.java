@@ -63,6 +63,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 	private ConceptService conceptService;
 	private FPersonService fPersonService;
 	private ProviderService providerService;
+	private IdMappingService idMappingService;
 
 	public OmopDeviceUseStatement(WebApplicationContext context) {
 		super(context, DeviceExposure.class, DeviceExposureService.class, DeviceUseStatementResourceProvider.getType());
@@ -81,6 +82,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		conceptService = context.getBean(ConceptService.class);
 		fPersonService = context.getBean(FPersonService.class);
 		providerService = context.getBean(ProviderService.class);
+		idMappingService = context.getBean(IdMappingService.class);
 	}
 	
 	public static OmopDeviceUseStatement getInstance() {
@@ -148,7 +150,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		Provider provider = entity.getProvider();
 		if (provider != null) {
 			Long providerOmopId = provider.getId();
-			String practitionerFhirId = IdMapping.getFHIRfromOMOP(providerOmopId, PractitionerResourceProvider.getType());
+			String practitionerFhirId = idMappingService.getFHIRfromOMOP(providerOmopId, PractitionerResourceProvider.getType());
 			myDeviceUseStatement.setSource(new Reference(new IdType(PractitionerResourceProvider.getType(),practitionerFhirId)));
 		}
 		
@@ -160,7 +162,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		Long omopId = null;
 		if (fhirId != null) {
 			// Search for this ID.
-			omopId = IdMapping.getOMOPfromFHIR(fhirId.getIdPart(), DeviceUseStatementResourceProvider.getType());
+			omopId = idMappingService.getOMOPfromFHIR(fhirId.getIdPart(), DeviceUseStatementResourceProvider.getType());
 		}
 		
 		DeviceExposure deviceExposure = constructOmop(omopId, fhirResource);
@@ -171,7 +173,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		} else {
 			omopRecordId = getMyOmopService().create(deviceExposure).getId();
 		}
-		return IdMapping.getFHIRfromOMOP(omopRecordId, DeviceUseStatementResourceProvider.getType());
+		return idMappingService.getFHIRfromOMOP(omopRecordId, DeviceUseStatementResourceProvider.getType());
 	}
 
 	@Override
@@ -284,7 +286,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		}
 		
 		String patientId = subjectReference.getIdPart();
-		Long omopPersonId = IdMapping.getOMOPfromFHIR(patientId, PatientResourceProvider.getType());
+		Long omopPersonId = idMappingService.getOMOPfromFHIR(patientId, PatientResourceProvider.getType());
 		FPerson fPerson = fPersonService.findById(omopPersonId);
 		if (fPerson == null) {
 			try {
@@ -317,7 +319,7 @@ public class OmopDeviceUseStatement extends BaseOmopResource<MyDeviceUseStatemen
 		if (practitionerSource != null && !practitionerSource.isEmpty()) {
 			IIdType practitionerReference = practitionerSource.getReferenceElement();
 			String practitionerId = practitionerReference.getIdPart();
-			Long omopProviderId = IdMapping.getOMOPfromFHIR(practitionerId, PractitionerResourceProvider.getType());
+			Long omopProviderId = idMappingService.getOMOPfromFHIR(practitionerId, PractitionerResourceProvider.getType());
 			Provider provider = providerService.findById(omopProviderId);
 			if (provider == null) {
 				throw new FHIRException("DeviceUseStatement.source(Practitioner) does not exist");

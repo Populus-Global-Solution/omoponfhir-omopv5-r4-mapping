@@ -148,7 +148,7 @@ public class ObservationResourceProvider implements IResourceProvider {
 		List<ParameterWrapper> paramList = new ArrayList<ParameterWrapper> ();
 
 		if (theObservationId != null) {
-			paramList.addAll(getMyMapper().mapParameter (Observation.SP_RES_ID, theObservationId, false));
+			paramList.addAll(getMyMapper().mapParameter(Observation.SP_RES_ID, theObservationId, false));
 		}
 
 		String orderParams = getMyMapper().constructOrderParams(theSort);
