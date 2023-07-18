@@ -1651,6 +1651,7 @@ public class OmopObservation extends BaseOmopResource<Observation, FObservationV
 				retId = observationService.update(observation).getId();
 			} else {
 				retId = observationService.create(observation).getId();
+				idMappingService.writeMapping(fhirIdString, fhirResource.fhirType(), retId);
 			}
 
 			date = observation.getObservationDate();

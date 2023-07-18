@@ -114,6 +114,8 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 			omopId = getMyOmopService().update(observation).getIdAsLong();
 		} else {
 			omopId = getMyOmopService().create(observation).getIdAsLong();
+			// Just use the omop Long if there's no fhirId
+			idMappingService.writeMapping(fhirId == null ? omopId.toString() : fhirId.getIdPart(), fhirResource.fhirType(), omopId);
 		}
 
 		return idMappingService.getFHIRfromOMOP(omopId, fhirResource.getResourceType().name());

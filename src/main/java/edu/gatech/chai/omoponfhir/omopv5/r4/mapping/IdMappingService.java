@@ -49,17 +49,13 @@ public class IdMappingService {
 	 * @return
 	 */
 	public Long getOMOPfromFHIR(String fhirId, String resourceName) {
-		Optional<IdPair> mapping = idPairService.findByFhirId(fhirId);
-
-		if (mapping.isEmpty()) {
-			return writeMapping(fhirId, resourceName).getOmopId();
-		}
-
-		return mapping.get().getOmopId();
+		return idPairService.findByFhirId(fhirId)
+				.map(IdPair::getOmopId)
+				.orElse(null);
 	}
 
-	private IdPair writeMapping(String fhirId, String resourceName) {
+	public IdPair writeMapping(String fhirId, String resourceName, Long omopId) {
 		logger.info("Creating mapping for a {} with FHIR id {}", resourceName, fhirId);
-		return idPairService.create(new IdPair(fhirId));
+		return idPairService.create(new IdPair(fhirId, omopId));
 	}
 }

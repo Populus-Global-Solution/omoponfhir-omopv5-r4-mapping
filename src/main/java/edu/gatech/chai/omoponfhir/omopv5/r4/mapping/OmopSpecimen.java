@@ -462,6 +462,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 			omopRecordId = getMyOmopService().update(omopSecimen).getId();
 		} else {
 			omopRecordId = getMyOmopService().create(omopSecimen).getId();
+			idMappingService.writeMapping(fhirIdString, fhirResource.fhirType(), omopRecordId);
 		}
 
 		return idMappingService.getFHIRfromOMOP(omopRecordId, SpecimenResourceProvider.getType());
