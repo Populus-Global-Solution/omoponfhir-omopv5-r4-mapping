@@ -66,7 +66,7 @@ public abstract class BaseOmopResource<F extends Resource, O extends BaseEntity,
 	public BaseOmopResource(WebApplicationContext context, Class<O> entityClass, Class<S> serviceClass,
 			String fhirResourceType) {
 		myOmopService = context.getBean(serviceClass);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 		
 		myEntityClass = entityClass;
 		myFhirResourceType = fhirResourceType;

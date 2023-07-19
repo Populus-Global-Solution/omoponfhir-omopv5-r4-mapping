@@ -57,7 +57,7 @@ public class OmopMedication extends BaseOmopResource<Medication, Concept, Concep
 	}
 	
 	private void initialize(WebApplicationContext context) {
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 
 	public static OmopMedication getInstance() {

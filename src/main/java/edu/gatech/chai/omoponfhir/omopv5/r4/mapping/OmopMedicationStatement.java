@@ -113,7 +113,7 @@ public class OmopMedicationStatement extends BaseOmopResource<MedicationStatemen
 		conceptService = context.getBean(ConceptService.class);
 		providerService = context.getBean(ProviderService.class);
 		fPersonService = context.getBean(FPersonService.class);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 
 	public static OmopMedicationStatement getInstance() {

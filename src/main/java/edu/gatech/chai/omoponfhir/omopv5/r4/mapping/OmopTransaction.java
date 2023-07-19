@@ -80,7 +80,7 @@ public class OmopTransaction {
 		observationService = context.getBean(ObservationService.class);
 		measurementService = context.getBean(MeasurementService.class);
 		noteService = context.getBean(NoteService.class);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 
 	public static OmopTransaction getInstance() {

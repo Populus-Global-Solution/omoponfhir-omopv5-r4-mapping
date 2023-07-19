@@ -83,7 +83,7 @@ public class PatientResourceProvider implements IResourceProvider {
 	public PatientResourceProvider() {
 		myAppCtx = ContextLoaderListener.getCurrentWebApplicationContext();
 		myDbType = myAppCtx.getServletContext().getInitParameter("backendDbType");
-		idMappingService = myAppCtx.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 		if (myDbType.equalsIgnoreCase("omopv5") == true) {
 			myMapper = new OmopPatient(myAppCtx);
 		} else {

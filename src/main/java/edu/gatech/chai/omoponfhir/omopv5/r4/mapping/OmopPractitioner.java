@@ -70,7 +70,7 @@ public class OmopPractitioner extends BaseOmopResource<Practitioner, Provider, P
 	private void initialize(WebApplicationContext context) {
 		careSiteService = context.getBean(CareSiteService.class);
 		locationService = context.getBean(LocationService.class);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 	
 	public static OmopPractitioner getInstance() {

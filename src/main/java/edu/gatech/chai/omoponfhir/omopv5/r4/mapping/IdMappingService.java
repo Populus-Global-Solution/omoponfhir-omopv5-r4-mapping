@@ -19,10 +19,7 @@ import edu.gatech.chai.omopv5.dba.service.IdPairService;
 import edu.gatech.chai.omopv5.model.entity.IdPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.web.context.ContextLoaderListener;
 
 /**
  * ID Mapping Class to manage the IDs between FHIR and OMOP.
@@ -30,12 +27,20 @@ import java.util.Optional;
  * @author mc142
  *
  */
-@Service
 public class IdMappingService {
 	static final Logger logger = LoggerFactory.getLogger(IdMappingService.class);
 
-	@Autowired
 	private IdPairService idPairService;
+
+	private static IdMappingService instance = new IdMappingService();
+
+	private IdMappingService() {
+		idPairService = ContextLoaderListener.getCurrentWebApplicationContext().getBean(IdPairService.class);
+	}
+
+	public static IdMappingService getInstance() {
+		return instance;
+	}
 
 	public String getFHIRfromOMOP(Long omopId, String resourceName) {
 		return idPairService.findByOmopId(omopId)

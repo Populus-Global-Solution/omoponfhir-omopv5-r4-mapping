@@ -117,7 +117,7 @@ public class OmopImmunization extends BaseOmopResource<Immunization, FImmunizati
 			conceptService = context.getBean(ConceptService.class);
 			providerService = context.getBean(ProviderService.class);
 			fPersonService = context.getBean(FPersonService.class);
-			idMappingService = context.getBean(IdMappingService.class);
+			idMappingService = IdMappingService.getInstance();
 		}
 	}
 

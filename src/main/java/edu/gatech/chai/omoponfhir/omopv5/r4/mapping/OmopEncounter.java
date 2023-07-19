@@ -86,7 +86,7 @@ public class OmopEncounter extends BaseOmopResource<Encounter, VisitOccurrence, 
 		careSiteService = context.getBean(CareSiteService.class);
 		providerService = context.getBean(ProviderService.class);
 		conditionOccurrenceService = context.getBean(ConditionOccurrenceService.class);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 
 	public static OmopEncounter getInstance() {

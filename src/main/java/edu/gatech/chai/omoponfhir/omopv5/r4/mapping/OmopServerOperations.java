@@ -61,7 +61,7 @@ public class OmopServerOperations {
 		fPersonService = context.getBean(FPersonService.class);
 		observationService = context.getBean(ObservationService.class);
 		measurementService = context.getBean(MeasurementService.class);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 
 	public static OmopTransaction getInstance() {

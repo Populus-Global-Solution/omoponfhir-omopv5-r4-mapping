@@ -85,7 +85,7 @@ public class OmopProcedure extends BaseOmopResource<Procedure, ProcedureOccurren
 		fPersonService = context.getBean(FPersonService.class);
 		visitOccurrenceService = context.getBean(VisitOccurrenceService.class);
 		providerService = context.getBean(ProviderService.class);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 	
 	public static OmopProcedure getInstance() {

@@ -85,7 +85,7 @@ public class OmopCondition extends BaseOmopResource<Condition, ConditionOccurren
 			providerService = context.getBean(ProviderService.class);
 			conceptService = context.getBean(ConceptService.class);
 			visitOccurrenceService = context.getBean(VisitOccurrenceService.class);
-			idMappingService = context.getBean(IdMappingService.class);
+			idMappingService = IdMappingService.getInstance();
 		} else {
 			logger.error("context must be NOT null");
 		}

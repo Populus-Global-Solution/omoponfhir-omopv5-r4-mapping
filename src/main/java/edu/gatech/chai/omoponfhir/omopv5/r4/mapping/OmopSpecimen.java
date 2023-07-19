@@ -80,7 +80,7 @@ public class OmopSpecimen extends BaseOmopResource<Specimen, edu.gatech.chai.omo
 	private void initialize(WebApplicationContext context) {
 		// Get bean for other services that we need for mapping.
 		conceptService = context.getBean(ConceptService.class);
-		idMappingService = context.getBean(IdMappingService.class);
+		idMappingService = IdMappingService.getInstance();
 	}
 
 	public static OmopSpecimen getInstance() {
